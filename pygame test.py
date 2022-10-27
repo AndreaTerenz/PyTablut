@@ -23,7 +23,7 @@ def draw(screen):
 
 def main():
     pg.init()
-    screen = pg.display.set_mode((800, 800))
+    screen = pg.display.set_mode((400, 400))
     pg.display.set_caption("PyTablut")
 
     # main loop
