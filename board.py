@@ -75,6 +75,7 @@ class Board:
         self.whites = []
         for i in range(9):
             for j in range(9):
+                # Cella di turno da leggere
                 server_cell = server_state[i][j]
 
                 #FIXME: PIVI AGGIORNA PYTHON
