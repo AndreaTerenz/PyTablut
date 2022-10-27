@@ -19,9 +19,9 @@ class Cell:
         self.checker = _checker
 
 class Board:
+    empty_cell = Cell(CellType.NORMAL, CheckerType.EMPTY)
     def __init__(self):
-        empty_cell = Cell(CellType.NORMAL, CheckerType.EMPTY)
-        self.grid = np.full((9,9), empty_cell)
+        self.grid = np.full((9,9), Board.empty_cell)
         self.whites = []
         self.blacks = []
         self.king = (4,4)
@@ -89,3 +89,7 @@ class Board:
                 elif server_cell == "KING":
                     self.grid[i][j].checker = CheckerType.KING
                     self.king = (i,j)
+
+    def send_move(self, move):
+        #TODO: Implement sending move to server with UDP
+        pass

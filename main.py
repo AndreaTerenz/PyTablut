@@ -24,10 +24,8 @@ def main(args):
 
     b.print_grid()
 
-    player = RandomPlayer(role="WHITE", board=b)
+    player = RandomPlayer(role="BLACK", board=b)
     player.play()
-
-
 
     return 0
 
