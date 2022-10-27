@@ -29,34 +29,31 @@ class Board:
         self.grid[4,4] = Cell(CellType.CASTLE, CheckerType.KING)
 
         # Escape cells
-        escapes = [(0,1),(0,2),(0,6),(0,7),
+        escapes = np.array([(0,1),(0,2),(0,6),(0,7),
                    (1,0),(1,8),
                    (2,0),(2,8),
                    (6,0),(6,8),
                    (7,0),(7,8),
-                   (8,1),(8,2),(8,6),(8,7),]
+                   (8,1),(8,2),(8,6),(8,7),])
 
         # Black camps
-        self.blacks = [(0,3),(0,4),(0,5),
+        self.blacks = np.array([(0,3),(0,4),(0,5),
                  (1,4),
                  (3,0),(3,8),
                  (4,0),(4,1),(4,7),(4,8),
                  (5,0),(5,8),
                  (7,4),
-                 (8,3),(8,4),(8,5)]
+                 (8,3),(8,4),(8,5)])
 
-        self.whites = [(2,4),
+        self.whites =np.array([(2,4),
                   (3,4),
                   (4,2),(4,3),(4,5),(4,6),
                   (5,4),
-                  (6,4)]
+                  (6,4)])
 
-        for e in escapes:
-            self.grid[e[0], e[1]] = Cell(CellType.ESCAPE, CheckerType.EMPTY)
-        for c in self.blacks:
-            self.grid[c[0], c[1]] = Cell(CellType.CAMP, CheckerType.BLACK)
-        for w in self.whites:
-            self.grid[w[0], w[1]] = Cell(CellType.NORMAL, CheckerType.WHITE)
+        self.grid[escapes[0,:],escapes[1,:]]=Cell(CellType.ESCAPE, CheckerType.EMPTY)
+        self.grid[self.blacks[0,:],self.blacks[1:]]=Cell(CellType.CAMP, CheckerType.BLACK)
+        self.grid[self.whites[0,:],self.whites[1:]]=Cell(CellType.NORMAL, CheckerType.WHITE)
 
     def print_grid(self):
         for i in range(9):
