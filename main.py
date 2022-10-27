@@ -20,13 +20,16 @@ def main(args):
 
     ic(f"Role: {role}")
 
-    udp = Connection(ip, port)
+    conn = Connection(ip, port)
+
     b = Board()
 
     b.print_grid()
 
     player = RandomPlayer(role="BLACK", board=b)
     player.play()
+
+    conn.close()
 
     return 0
 
