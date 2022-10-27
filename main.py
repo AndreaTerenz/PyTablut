@@ -1,6 +1,8 @@
 import sys, json
 from icecream import ic
 from board import Board
+from player import RandomPlayer
+
 
 def main(args):
     print("Tablut client")
@@ -22,12 +24,10 @@ def main(args):
 
     b.print_grid()
 
-    # Read test json file
-    with open("test_board.json", "r") as test_json:
-        response = json.load(test_json)
-        b.update_state(response["board"])
-    print("AAAAAAAAAAAAAA")
-    b.print_grid()
+    player = RandomPlayer(role="WHITE", board=b)
+    player.play()
+
+
 
     return 0
 
