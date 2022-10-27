@@ -1,6 +1,7 @@
 import sys, json
 from icecream import ic
 from board import Board
+from connect import Connection
 from player import RandomPlayer
 
 
@@ -17,9 +18,9 @@ def main(args):
     port = args[2]
     ip = args[3]
 
-    print(f"Role: {role}")
-    print(f"Connecting to: {ip}:{port}")
+    ic(f"Role: {role}")
 
+    udp = Connection(ip, port)
     b = Board()
 
     b.print_grid()
