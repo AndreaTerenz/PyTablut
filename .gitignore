@@ -285,3 +285,4 @@ cython_debug/
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/PyTablut.iml
 /.idea/vcs.xml
+/.idea/other.xml

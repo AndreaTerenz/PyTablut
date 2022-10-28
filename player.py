@@ -80,6 +80,8 @@ class RandomPlayer(BasePlayer):
                 moves.append((i,c))
             else:
                 break
+
+        #FIXME: THIS LIST COULD BE EMPTY!
         ic(moves)
         return ic(rnd.choice(moves))
 

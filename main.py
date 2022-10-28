@@ -15,7 +15,7 @@ def main(args):
         return -1
 
     role = args[1]
-    port = args[2]
+    port = int(args[2])
     ip = args[3]
 
     ic(f"Role: {role}")
