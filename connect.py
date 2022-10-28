@@ -12,6 +12,7 @@ class Connection:
 
         self.port = port
         self.ip = ip
+        #FIXME: ACTUALLY THIS SHOULD USE TCP (Chesani spreads fake news on the internet)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.socket.bind((self.ip, self.port))
         self.socket.settimeout(90)

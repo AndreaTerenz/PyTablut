@@ -5,11 +5,22 @@ import random as rnd
 from icecream import ic
 
 class BasePlayer(ABC):
+    """
+    Generic player class (abstract). Has functionality to compute the next move based on role
+    and to check if a move is valid
+    """
+
     def __init__(self, role, board):
         self.role = role
         self.board = board
 
     def play(self):
+        """
+        Compute next move based on role
+
+        :return: The computed move
+        """
+
         move = None
         if self.role == "WHITE":
             move = self.play_white()
@@ -18,29 +29,63 @@ class BasePlayer(ABC):
 
         self.board.send_move(move)
 
-    def check_move(self, move_r, move_c, cell_r, cell_c):
-        cell_type = self.board.grid[move_r, move_c].type
-        checker = self.board.grid[move_r, move_c].checker
+        return move
+
+    def check_move(self, move_r, move_c, cell_r, cell_c) -> bool:
+        """
+        Check if moving a checker from (cell_r,cell_c) to (move_r.move_c) is a valid move
+
+        :param move_r: destination row
+        :param move_c: destination column
+        :param cell_r: starting row
+        :param cell_c: starting column
+        :return: True if the move is valid
+        """
+        dest_cell_checker = self.board.grid[move_r, move_c].checker
+
+        # Innanzitutto, la cella di destinazione deve essere vuota
+        if dest_cell_checker != CheckerType.EMPTY:
+            return False
+
+        dest_cell_type = self.board.grid[move_r, move_c].type
 
         if self.role == "WHITE":
-            return checker == CheckerType.EMPTY and cell_type in [CellType.NORMAL, CellType.ESCAPE]
+            # Deve essere VUOTA
+            # Puo' essere una cella NORMAL o una ESCAPE
+            return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]
         elif self.role == "BLACK":
             if self.board.grid[cell_r, cell_c].type == CellType.CAMP:
                 # Deve essere VUOTA
                 # Non puo' essere il CASTLE
-                return checker == CheckerType.EMPTY and cell_type != CellType.CASTLE
+                return dest_cell_type != CellType.CASTLE
             else:
-                return checker == CheckerType.EMPTY and cell_type in [CellType.NORMAL, CellType.ESCAPE]
+                # Deve essere VUOTA
+                # Puo' essere una cella NORMAL o una ESCAPE
+                return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]
 
     @abstractmethod
     def play_black(self):
+        """
+        Play black move
+
+        :return: Black's move
+        """
         pass
 
     @abstractmethod
     def play_white(self):
+        """
+        Play white move
+
+        :return: White's move
+        """
         pass
 
 class RandomPlayer(BasePlayer):
+    """
+    Random player - at every turn, picks a random checker and returns a random move for it
+    """
+
     def play_random(self):
         """
         Play a random move given your role
@@ -81,7 +126,7 @@ class RandomPlayer(BasePlayer):
             else:
                 break
 
-        #FIXME: THIS LIST COULD BE EMPTY!
+        #FIXME: THIS LIST COULD BE EMPTY! ops
         ic(moves)
         return ic(rnd.choice(moves))
 

@@ -2,23 +2,46 @@ from enum import Enum
 import numpy as np
 
 class CellType(Enum):
+    """
+    Possible board cell types
+    """
+
     NORMAL = 0
     CASTLE = 1
     CAMP = 2
     ESCAPE = 3
 
 class CheckerType(Enum):
+    """
+    Possible checker types
+    """
+
     EMPTY = 0
     WHITE = 1
     BLACK = 2
     KING = 3
 
 class Cell:
+    """
+    Represents a cell in the board grid
+    """
+
     def __init__(self, _type, _checker):
+        """
+        Create a new Cell object
+
+        :param _type: cell type
+        :param _checker: type of the checker currently on this cell
+        """
+
         self.type = _type
         self.checker = _checker
 
 class Board:
+    """
+    Represents the global state of the game
+    """
+
     empty_cell = Cell(CellType.NORMAL, CheckerType.EMPTY)
     def __init__(self):
         self.grid = np.full((9,9), Board.empty_cell)
@@ -114,5 +137,7 @@ class Board:
                     self.king = (i,j)
 
     def send_move(self, move):
-        #TODO: Implement sending move to server with UDP
+        #TODO: Actually send move to server
+        #NOTE: Maybe don't do this in the Board object and leave it to the main script?
+        # This way it doesn't need a reference to the Connection object. Idk seems cleaner
         pass
