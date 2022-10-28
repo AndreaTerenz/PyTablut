@@ -2,20 +2,21 @@ import socket
 from icecream import ic
 
 class Connection:
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, timeout=60):
         """
         Create a new UDP connection to the given IP address and Port number
 
         :param ip: IP address
         :param port: port number
+        :param timeout: socket timeout (default 60)
         """
 
         self.port = port
         self.ip = ip
         #FIXME: ACTUALLY THIS SHOULD USE TCP (Chesani spreads fake news on the internet)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.socket.bind((self.ip, self.port))
-        self.socket.settimeout(90)
+        #self.socket.bind((self.ip, self.port))
+        self.socket.settimeout(timeout)
         self.buffer_size = 1024
         ic(f"Connected to: {ip}:{port}")
 
@@ -26,13 +27,13 @@ class Connection:
         :param data_buf: string to be sent
         :return: number of bytes sent (-1 on failure)
         """
-        sent = self.socket.send(str.encode(data_buf))
+        sent = self.socket.sendto(str.encode(data_buf), (self.ip, self.port))
 
         if sent == 0:
             ic("SOCKET CONNECTION BROKEN! (sending)")
             sent = -1
 
-        return sent
+        return ic(sent)
 
     def receive(self) -> str | None:
         """
@@ -61,3 +62,10 @@ class Connection:
         """
 
         self.socket.close()
+
+if __name__ == "__main__":
+    conn = Connection("127.0.0.1", 5800, timeout=300)
+    ic("lessgo")
+    conn.send("OSTIA PATACCA LOMO")
+
+    conn.receive()
