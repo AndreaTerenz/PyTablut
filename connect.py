@@ -4,21 +4,24 @@ from icecream import ic
 class Connection:
     def __init__(self, ip, port, timeout=60):
         """
-        Create a new UDP connection to the given IP address and Port number
+        Create a new connection to the given IP address and Port number
 
         :param ip: IP address
         :param port: port number
-        :param timeout: socket timeout (default 60)
+        :param timeout: socket timeout in seconds (default 60)
         """
 
         self.port = port
         self.ip = ip
-        #FIXME: ACTUALLY THIS SHOULD USE TCP (Chesani spreads fake news on the internet)
-        self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        #self.socket.bind((self.ip, self.port))
+        self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.socket.settimeout(timeout)
         self.buffer_size = 1024
-        ic(f"Connected to: {ip}:{port}")
+
+        try:
+            self.socket.connect((self.ip, self.port))
+            ic(f"Connected to: {ip}:{port}")
+        except socket.error as e:
+            ic(f"CONNECTION FAILED! ({e})")
 
     def send(self, data_buf) -> int:
         """
@@ -27,7 +30,7 @@ class Connection:
         :param data_buf: string to be sent
         :return: number of bytes sent (-1 on failure)
         """
-        sent = self.socket.sendto(str.encode(data_buf), (self.ip, self.port))
+        sent = self.socket.send(data_buf.encode())
 
         if sent == 0:
             ic("SOCKET CONNECTION BROKEN! (sending)")
@@ -64,7 +67,7 @@ class Connection:
         self.socket.close()
 
 if __name__ == "__main__":
-    conn = Connection("127.0.0.1", 5800, timeout=300)
+    conn = Connection("127.0.0.1", 5800, timeout=4)
     ic("lessgo")
     conn.send("OSTIA PATACCA LOMO")
 
