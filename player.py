@@ -1,8 +1,11 @@
 #AbstractBaseClasses
-from abc import ABC, abstractmethod
-from board import Board, CheckerType, CellType
 import random as rnd
+from abc import ABC, abstractmethod
+
 from icecream import ic
+
+from board import CheckerType, CellType
+
 
 class BasePlayer(ABC):
     """
@@ -106,10 +109,17 @@ class RandomPlayer(BasePlayer):
             ic(r,c)
             moves = []
 
+            """
+            moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c-1,-1,-1))]
+            moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c + 1, 9))]
+            moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r - 1, -1, -1))]
+            moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r + 1, 9))]
+            """
+
             # Explore left
-            for j in range(c-1,-1,-1):
-                if self.check_move(r,j,r,c):
-                    moves.append((r,j))
+            for j in range(c - 1, -1, -1):
+                if self.check_move(r, j, r, c):
+                    moves.append((r, j))
                 else:
                     break
             # Explore right
