@@ -25,6 +25,7 @@ class Board:
         self.whites = []
         self.blacks = []
         self.king = (4,4)
+        
 
         self.grid[4,4] = Cell(CellType.CASTLE, CheckerType.KING)
 
@@ -68,24 +69,17 @@ class Board:
         :param server_state: grid state from server
         :return: None
         """
-        self.blacks = []
-        self.whites = []
-        for i in range(9):
-            for j in range(9):
-                server_cell = server_state[i][j]
-
-                #FIXME: PIVI AGGIORNA PYTHON
-                if server_cell == "EMPTY":
-                    self.grid[i][j].checker = CheckerType.EMPTY
-                elif server_cell == "WHITE":
-                    self.grid[i][j].checker = CheckerType.WHITE
-                    self.whites.append((i,j))
-                elif server_cell == "BLACK":
-                    self.grid[i][j].checker = CheckerType.BLACK
-                    self.blacks.append((i, j))
-                elif server_cell == "KING":
-                    self.grid[i][j].checker = CheckerType.KING
-                    self.king = (i,j)
+        self.grid[server_state=="EMPTY"].checker=CheckerType.EMPTY
+        self.grid[server_state=="WHITE"].checker=CheckerType.WHITE
+        i,j=np.where(server_state=="WHITE")
+        self.whites=tuple(zip(i,j))
+        self.grid[server_state=="BLACK"].checker=CheckerType.BLACK
+        i,j=np.where(server_state=="BLACK")
+        self.black=tuple(zip(i,j))
+        self.grid[server_state=="KING"].checker=CheckerType.KING
+        i,j=np.where(server_state=="KING")
+        self.king=(int(i),int(j))
+        return None
 
     def send_move(self, move):
         #TODO: Implement sending move to server with UDP

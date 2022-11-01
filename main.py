@@ -10,7 +10,7 @@ def main(args):
 
     # script path + (role port ip)
     if len(args) != 4:
-        print("WRONG NUMBER OF ARGUMENTS")
+        ic("WRONG NUMBER OF ARGUMENTS")
         return -1
 
     role = args[1]
