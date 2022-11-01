@@ -3,57 +3,64 @@
 import json
 import socket
 import struct
+import sys
+from time import sleep
+
 from icecream import ic
-from player import BasePlayer
 
 
 class Connection:
-
     # According to the server code, it will use these two ports to
     # communicate with the corresponding players
     WHITE_PORT = 5800
     BLACK_PORT = 5801
 
-    def __init__(self, player_name: str, player_color: str, server_ip="localhost", timeout=60):
+    def __init__(self, player_name: str, player_color: str, server_ip="localhost", server_port=None, timeout=60):
         """
         Create a new connection to the game server
 
         :param player_name: Player name to use for the game
         :param player_color: Player color ("BLACK" or "WHITE")
         :param server_ip: Server IP address to connect to (defaults to localhost)
+        :param server_port: Server port number to connect to (if omitted, it will be determined from the player_color)
         :param timeout: Socket timeout in seconds (defaults to 60)
-        :raises ConnectionFailedError: The connection can't be established
         """
-
+        self.name = player_name
+        self.color = player_color
         self.ip = server_ip
-        self.port = Connection.WHITE_PORT if player_color == "WHITE" else Connection.BLACK_PORT
+        self.port = server_port if server_port else get_player_port(self.color)
 
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.socket.settimeout(timeout)
 
+    def connect_to_server(self):
+        """
+        Attempts to connect to the game server
+
+        :raises ConnectionFailedError: The connection can't be established
+        """
         try:
             self.socket.connect((self.ip, self.port))
-            ic(f"Connected to: {self.ip}:{self.port}")
-            self.__send_string(player_name)
+            ic(f"Connected to {self.ip}:{self.port} as {self.color} player")
+            self.__send_string(self.name)
         except socket.error as e:
             ic(f"CONNECTION FAILED! ({e})")
             self.socket = None
-            raise ConnectionFailedError(self.ip, self.port, player_name, player_color)
+            raise ConnectionFailedError(self.ip, self.port, self.name, self.color, e)
 
-    def send_move(self, from_pos: tuple[int], to_pos: tuple[int], player_obj: BasePlayer):
+    def send_move(self, from_pos: tuple[int], to_pos: tuple[int]):
         """
         Send a move to the server.
 
         :param from_pos: Move starting cell
         :param to_pos: Move destination cell
-        :param player_obj: BasePlayer object (used to determine color - BLACK or WHITE)
         """
 
         # Encode the input parameters into a dictionary and transform it into a JSON string
         data = json.dumps({
             "from": encode_grid_pos(from_pos),
             "to": encode_grid_pos(to_pos),
-            "turn": player_obj.role,
+            "turn": self.color,
         })
 
         self.__send_string(data)
@@ -134,12 +141,35 @@ def encode_grid_pos(pos : tuple[int]) -> str:
     # The chr(n) method converts and ASCII code to its corresponding carachter
     return f"{chr(97 + col)}{1+row}"
 
+def get_player_port(color: str) -> int:
+    """
+    "Converts" the player color ("BLACK" or "WHITE") to its corresponding port number (5801 or 5800)
+
+    :param color: player's color
+    :return: port number
+    """
+
+    return Connection.WHITE_PORT if color == "WHITE" else Connection.BLACK_PORT
+
 class ConnectionFailedError(Exception):
-    def __init__(self, ip, port, name, color):
+    def __init__(self, ip, port, name, color, err):
         self.ip = ip
         self.port = port
         self.name = name
         self.color = color
+        self.error = err
+
+    def __str__(self):
+        return f"Failed to connect to server '{self.ip}' on port '{self.port}' as player '{self.name}' [{self.error}]"
 
 if __name__ == "__main__":
-    pass
+    col = sys.argv[1] if len(sys.argv) > 0 else "WHITE"
+    conn = Connection("test", col)
+
+    try:
+        conn.connect_to_server()
+        sleep(50000)
+    except ConnectionFailedError as cfe:
+        ic(cfe)
+
+    conn.close()
