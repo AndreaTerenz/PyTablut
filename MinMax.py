@@ -34,6 +34,9 @@ def Heuristic(board,node):
 
 
 def minmax(position,depth,alpha=-np.inf,beta=+np.inf,maximizingPlayer=None):
+    #funziona in caso di un tree in cui ogni ogni nodo due figli, 
+    #devo pensare se funziona anche con un nodo con più figli
+    #ma penso di si
     if depth==0 :
         return Heuristic(position)
     if maximizingPlayer=="WHITE":
