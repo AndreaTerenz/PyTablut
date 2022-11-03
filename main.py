@@ -21,11 +21,22 @@ def main(args):
     print(f"Connecting to: {ip}:{port}")
 
     b = Board()
-
+    
+    print("Initial state:")
     b.print_grid()
 
     player = RandomPlayer(role="BLACK", board=b)
-    player.play()
+    #player.play()
+
+    def print_grid(board_copy):
+        for i in range(1,10):
+            for j in range(1,10):
+                print(f"{board_copy.grid[i][j].type.value};{board_copy.grid[i][j].checker.value} ", end=" ")
+            print()
+
+    b_update = player.self_update()
+    print("Final state after eating:")
+    print_grid(b_update)
 
     return 0
 

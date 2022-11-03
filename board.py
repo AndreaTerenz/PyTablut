@@ -58,10 +58,31 @@ class Board:
         for w in self.whites:
             self.grid[w[0], w[1]] = Cell(CellType.NORMAL, CheckerType.WHITE)
 
-    def print_grid(self):
+    def print_grid(self, ascii_art = True):
+        """
+        Print current grid state
+        :param ascii_art: If True, print the grid in ASCII art (default True)
+        """
         for i in range(9):
             for j in range(9):
-                print(f"{self.grid[i][j].type.value};{self.grid[i][j].checker.value} ", end=" ")
+                cell_type = self.grid[i][j].type
+                checker_type = self.grid[i][j].checker
+
+                if not ascii_art:
+                    print(f"{cell_type.value};{checker_type.value} ", end=" ")
+                else:
+                    char_to_print = " "
+                    if cell_type == CellType.ESCAPE:
+                        char_to_print = "-"
+
+                    if checker_type == CheckerType.KING:
+                        char_to_print = "K"
+                    elif checker_type == CheckerType.BLACK:
+                        char_to_print = "B"
+                    elif checker_type == CheckerType.WHITE:
+                        char_to_print = "W"
+
+                    print(char_to_print, end=" ")
             print()
 
     def update_state(self, server_state):
@@ -93,3 +114,12 @@ class Board:
     def send_move(self, move):
         #TODO: Implement sending move to server with UDP
         pass
+
+    def copy(self):
+        board_copy = Board()
+        board_copy.grid = np.copy(self.grid)
+        board_copy.whites = self.whites.copy()
+        board_copy.blacks = self.blacks.copy()
+        board_copy.king = self.king
+
+        return board_copy
