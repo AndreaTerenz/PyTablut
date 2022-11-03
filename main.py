@@ -46,6 +46,8 @@ def main():
     b = Board()
     player = RandomPlayer(role, b)
 
+
+    ic("Initial state:")
     b.print_grid()
 
     player.play()

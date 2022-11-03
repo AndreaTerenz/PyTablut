@@ -141,3 +141,12 @@ class Board:
         #NOTE: Maybe don't do this in the Board object and leave it to the main script?
         # This way it doesn't need a reference to the Connection object. Idk seems cleaner
         pass
+
+    def copy(self):
+        board_copy = Board()
+        board_copy.grid = np.copy(self.grid)
+        board_copy.whites = self.whites.copy()
+        board_copy.blacks = self.blacks.copy()
+        board_copy.king = self.king
+
+        return board_copy
