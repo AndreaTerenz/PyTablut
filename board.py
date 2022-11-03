@@ -1,5 +1,7 @@
 from enum import Enum
+
 import numpy as np
+
 
 class CellType(Enum):
     """
@@ -37,6 +39,9 @@ class Cell:
         self.type = _type
         self.checker = _checker
 
+    def copy(self):
+        return Cell(self.type, self.checker)
+
 class Board:
     """
     Represents the global state of the game
@@ -44,7 +49,12 @@ class Board:
 
     empty_cell = Cell(CellType.NORMAL, CheckerType.EMPTY)
     def __init__(self):
-        self.grid = np.full((9,9), Board.empty_cell)
+        self.grid = np.zeros((9,9), dtype=np.dtype(Cell))
+
+        for i in range(9):
+            for j in range(9):
+                self.grid[i,j] = Cell(CellType.NORMAL, CheckerType.EMPTY)
+
         self.whites = []
         self.blacks = []
         self.king = (4,4)
@@ -96,8 +106,6 @@ class Board:
                     print(f"{cell_type.value};{checker_type.value} ", end=" ")
                 else:
                     char_to_print = " "
-                    if cell_type == CellType.ESCAPE:
-                        char_to_print = "-"
 
                     if checker_type == CheckerType.KING:
                         char_to_print = "K"
@@ -105,6 +113,11 @@ class Board:
                         char_to_print = "B"
                     elif checker_type == CheckerType.WHITE:
                         char_to_print = "W"
+                    else:
+                        # Everything here applies only to EMPTY cells
+                        char_to_print = " "
+                        if cell_type == CellType.ESCAPE:
+                            char_to_print = "-"
 
                     print(char_to_print, end=" ")
             print()
@@ -142,9 +155,23 @@ class Board:
         # This way it doesn't need a reference to the Connection object. Idk seems cleaner
         pass
 
+    def apply_move(self, from_cell, to_cell):
+        output = self.copy()
+
+        checker_to_move = output.grid[from_cell].checker
+
+        output.grid[to_cell].checker = checker_to_move
+        output.grid[from_cell].checker = CheckerType.EMPTY
+
+        return output
+
     def copy(self):
         board_copy = Board()
-        board_copy.grid = np.copy(self.grid)
+
+        for i in range(9):
+            for j in range(9):
+                board_copy.grid[i,j] = self.grid[i,j].copy()
+
         board_copy.whites = self.whites.copy()
         board_copy.blacks = self.blacks.copy()
         board_copy.king = self.king
