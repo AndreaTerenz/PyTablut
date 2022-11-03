@@ -4,6 +4,7 @@ import numpy as np
 from icecream import ic
 
 
+
 class CellType(Enum):
     """
     Possible board cell types
@@ -248,6 +249,16 @@ class Board:
                     self.king = position
 
         return True
+
+    def apply_move(self, from_cell, to_cell):
+        output = self.copy()
+
+        checker_to_move = output.grid[from_cell].checker
+
+        output.grid[to_cell].checker = checker_to_move
+        output.grid[from_cell].checker = CheckerType.EMPTY
+
+        return output
 
     def copy(self):
         board_copy = Board()
