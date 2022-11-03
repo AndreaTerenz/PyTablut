@@ -1,1 +1,0 @@
-# Definizione della funzione euristica
