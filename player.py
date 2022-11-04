@@ -16,6 +16,8 @@ class BasePlayer(ABC):
         self.role = role
         self.board = board
 
+        #FIXME: Chiama l'800 6969 per donare un euro alla lotta contro
+        # l'uso di CheckerType per indicare il ruolo del player...
         if self.role == "WHITE":
             self.role = CheckerType.WHITE
             self.opponent = CheckerType.BLACK # avversario
@@ -91,70 +93,6 @@ class BasePlayer(ABC):
         """
         pass
 
-    def self_update(self):
-        """
-        LAVORA CON UNA COPIA DELLA GRIGLIA, non la griglia originale.
-        data la pedina da muovere (self.old_pos) e la mossa scelta (self.new_pos),
-        mette la pedina nella nuova posizione, controlla il suo vicinato per vedere se c'è
-        da mangiare e nel caso mangia.
-        In pratica crea una nuova griglia con lo stato aggiornato.
-        In più calcola l'euristica (con una funzione che è ancora da implementare).
-        Ritorna la copia della griglia aggiornata e il valore della funzione euristica.
-
-        :param None
-        :return: the updated copy of the board
-        """
-        # board_copy = self.board.copy()
-        #
-        # ciao = board_copy.grid[self.old_pos].checker
-        # board_copy.grid[self.old_pos].checker = CheckerType.EMPTY #tolgo il checker dalla posizione vecchia
-        #
-        # board_copy.grid[self.new_pos].checker = ciao #metto il checker nella nuova posizione
-
-        board_copy = self.board.apply_move(self.old_pos, self.new_pos)
-
-        """
-        Funzione per mangiare le pedine. Dato il checker spostato nella nuova posizione
-        (indicizzata da new_pos), controlla il suo vicinato. Se nel vicinato ci sono
-        pedine dell'avversario, allora controlla la pedina vicina a tali pedine sulla stessa
-        linea. Se c'è una pedina del colore della pedina che ha appena fatto la mossa, OPPURE
-        una casella di tipo CAMP OPPURE la casella CASTLE, la pedina avversaria viene rimossa
-        perché viene mangiata.
-        """
-
-        row = self.new_pos[0]
-        column = self.new_pos[1] #creo ste variabili solo per semplicità di notazione
-
-        # controllo se nel vicinato della pedina ci sono pedine avversarie. Se
-        # ci sono controllo sulla stessa linea di vista come ho scritto prima.
-        # Se vanno mangiate, setto il CheckerType di quella Cell come EMPTY.
-
-        eaten_checkers = list() #lista delle cordinate delle pedine che verranno mangiate muahahah
-
-        if column > 0 and board_copy.grid[row, column - 1].checker == ic(self.opponent):
-            if board_copy.grid[row, column - 2].checker == self.role or board_copy.grid[row, column - 2].type == CellType.CAMP or board_copy.grid[row, column - 2].type == CellType.CASTLE:
-                eaten_checkers.append((row, column - 1))
-
-        if column < 9 and board_copy.grid[row, column + 1].checker == self.opponent:
-            if board_copy.grid[row, column + 2].checker == self.role or board_copy.grid[row, column + 2].type == CellType.CAMP or board_copy.grid[row, column + 2].type == CellType.CASTLE:
-                eaten_checkers.append((row, column + 1))
-
-        if row > 0 and board_copy.grid[row - 1, column].checker == self.opponent:
-            if board_copy.grid[row - 2, column].checker == self.role or board_copy.grid[row - 2, column].type == CellType.CAMP or board_copy.grid[row - 2, column].type == CellType.CASTLE:
-                eaten_checkers.append((row - 1, column))
-
-        if row < 9 and board_copy.grid[row + 1, column].checker == self.opponent:
-            if board_copy.grid[row + 2, column].checker == self.role or board_copy.grid[row + 2, column].type == CellType.CAMP or board_copy.grid[row + 2, column].type == CellType.CASTLE:
-                eaten_checkers.append((row + 1, column))
-
-        ic(f"Eaten checkers: {eaten_checkers}")
-        # rimuovo le pedine mangiate
-        for coordinate in eaten_checkers:
-            board_copy.grid[coordinate].checker = CheckerType.EMPTY
-
-        # ritorno la copia della board aggiornata
-        return board_copy
-
 class RandomPlayer(BasePlayer):
     """
     Random player - at every turn, picks a random checker and returns a random move for it
@@ -168,7 +106,7 @@ class RandomPlayer(BasePlayer):
         """
 
         # Get the list of your checkers
-        your_checkers = self.board.whites if self.role == "WHITE" else self.board.blacks
+        your_checkers = self.board.whites if self.role == CheckerType.WHITE else self.board.blacks
         # shuffle your checkers in a random order
         rnd.shuffle(your_checkers)
 

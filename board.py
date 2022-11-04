@@ -1,6 +1,7 @@
 from enum import Enum
 
 import numpy as np
+from icecream import ic
 
 
 class CellType(Enum):
@@ -149,21 +150,104 @@ class Board:
                     self.grid[i][j].checker = CheckerType.KING
                     self.king = (i,j)
 
-    def send_move(self, move):
-        #TODO: Actually send move to server
-        #NOTE: Maybe don't do this in the Board object and leave it to the main script?
-        # This way it doesn't need a reference to the Connection object. Idk seems cleaner
-        pass
+    def apply_move(self, from_cell, to_cell, role):
+        """
+        Returns a COPY of the board in which a checker has been moved from
+        'from_cell' to 'to_cell', checking also if any enemy checkers are taken
+        in the process
 
-    def apply_move(self, from_cell, to_cell):
+        :param from_cell:
+        :param to_cell:
+        :param role:
+        :return:
+        """
+
         output = self.copy()
 
         checker_to_move = output.grid[from_cell].checker
 
-        output.grid[to_cell].checker = checker_to_move
-        output.grid[from_cell].checker = CheckerType.EMPTY
+        output.set_checker_at_pos(to_cell, checker_to_move)
+        output.set_checker_at_pos(from_cell, CheckerType.EMPTY)
+
+        """
+        Funzione per mangiare le pedine. Dato il checker spostato nella nuova posizione
+        (indicizzata da new_pos), controlla il suo vicinato. Se nel vicinato ci sono
+        pedine dell'avversario, allora controlla la pedina vicina a tali pedine sulla stessa
+        linea. Se c'è una pedina del colore della pedina che ha appena fatto la mossa, OPPURE
+        una casella di tipo CAMP OPPURE la casella CASTLE, la pedina avversaria viene rimossa
+        perché viene mangiata.
+        """
+
+        row, column = to_cell #creo ste variabili solo per semplicità di notazione
+
+        # controllo se nel vicinato della pedina ci sono pedine avversarie. Se
+        # ci sono controllo sulla stessa linea di vista come ho scritto prima.
+        # Se vanno mangiate, setto il CheckerType di quella Cell come EMPTY.
+
+        eaten_checkers = [] #lista delle cordinate delle pedine che verranno mangiate muahahah
+
+        opponent = (CheckerType.BLACK if role == CheckerType.WHITE else CheckerType.WHITE)
+
+        # riga/colonna devono essere piu' di 1 e meno di 7, perche' ci vogliono
+        # due celle di spazio per poter mangiare in ogni direzione (una per la pedina
+        # avversaria da mangiare e un altro per la seconda pedina propria da usare per mangiare)
+        if column > 1 and output.grid[row, column - 1].checker == opponent:
+            if output.grid[row, column - 2].checker == role or output.grid[row, column - 2].type in [CellType.CAMP, CellType.CASTLE]:
+                eaten_checkers.append((row, column - 1))
+
+        if column < 7 and output.grid[row, column + 1].checker == opponent:
+            if output.grid[row, column + 2].checker == role or output.grid[row, column + 2].type in [CellType.CAMP, CellType.CASTLE]:
+                eaten_checkers.append((row, column + 1))
+
+        if row > 1 and output.grid[row - 1, column].checker == opponent:
+            if output.grid[row - 2, column].checker == role or output.grid[row - 2, column].type in [CellType.CAMP, CellType.CASTLE]:
+                eaten_checkers.append((row - 1, column))
+
+        if row < 7 and output.grid[row + 1, column].checker == opponent:
+            if output.grid[row + 2, column].checker == role or output.grid[row + 2, column].type in [CellType.CAMP, CellType.CASTLE]:
+                eaten_checkers.append((row + 1, column))
+
+        ic(f"Eaten checkers: {eaten_checkers}")
+        # rimuovo le pedine mangiate
+        for coordinate in eaten_checkers:
+            output.set_checker_at_pos(coordinate, CheckerType.EMPTY)
 
         return output
+
+    def set_checker_at_pos(self, position, new_checker: CheckerType) -> bool:
+        """
+        Puts a checker of a certain type into a certain position, updating the self.whites
+        or self.blacks list (depending on the 'checker' argument).
+
+        :param position: (row,column) destination position
+        :param new_checker: type of the checker being moved
+        """
+        old_check = self.grid[position].checker
+        if old_check != CheckerType.EMPTY and new_checker != CheckerType.EMPTY:
+            ic("CAN'T PUT A CHECKER IN A NON EMPTY CELL")
+            return False
+
+        self.grid[position].checker = new_checker
+
+        if new_checker == CheckerType.EMPTY:
+            match old_check:
+                case CheckerType.WHITE:
+                    self.whites.remove(position)
+                case CheckerType.BLACK:
+                    self.blacks.remove(position)
+                case CheckerType.KING:
+                    ic("....what do you mean you want to DELETE the king?")
+                    return False
+        else:
+            match new_checker:
+                case CheckerType.WHITE:
+                    self.whites += [position]
+                case CheckerType.BLACK:
+                    self.blacks += [position]
+                case CheckerType.KING:
+                    self.king = position
+
+        return True
 
     def copy(self):
         board_copy = Board()

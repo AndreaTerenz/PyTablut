@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 from icecream import ic
 
-from board import Board, CheckerType
+from board import Board
 from connect import Connection, get_player_port
 from player import RandomPlayer
 
@@ -46,18 +46,16 @@ def main():
         ic("Connection to server skipped")
 
     b = Board()
-    player = RandomPlayer("BLACK", b)
-
-    ic("Initial state:")
-
-    b.grid[0,5].checker = CheckerType.EMPTY
-    b.grid[2,5].checker = CheckerType.BLACK
-    b.print_grid()
-    player.old_pos = (0,3)
-    player.new_pos = (2,3)
-    player.self_update().print_grid()
     b.print_grid()
 
+    player = RandomPlayer(role, b)
+
+    _from, _to = player.play()
+    b = b.apply_move(_from, _to, player.role)
+    b.print_grid()
+    _from, _to = player.play()
+    b = b.apply_move(_from, _to, player.role)
+    b.print_grid()
 
     """
     Game loop:
@@ -69,6 +67,17 @@ def main():
         4) update board with M'
     """
 
+    """
+    if role == "BLACK":
+        new_state = conn.receive_new_state()
+        b.update_state(new_state)
+    
+    while True:
+        f,t = player.play()
+        conn.send_move(f, t)
+        new_state = conn.receive_new_state()
+        b.update_state(new_state)
+    """
     conn.close()
 
     return 0
