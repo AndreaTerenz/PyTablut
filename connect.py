@@ -85,14 +85,18 @@ class Connection:
 
         :param n: max number of bytes to receive
         :return: received data or None if failed
+        :raises ConnectionResetError: Connection was broken before all data could be received
         """
         data = b''
 
         while len(data) < n:
-            packet = self.socket.recv(n - len(data))
-            if not packet:
-                return None
-            data += packet
+            try:
+                packet = self.socket.recv(n - len(data))
+                if not packet:
+                    return None
+                data += packet
+            except ConnectionResetError:
+                raise ConnectionResetError
 
         return data
 
@@ -103,10 +107,13 @@ class Connection:
         :return: Board state as grid
         """
 
-        response_len = struct.unpack('>i', self.__receive_bytes(4))[0]
-        server_response = self.socket.recv(response_len)
+        try:
+            response_len = struct.unpack('>i', self.__receive_bytes(4))[0]
+            server_response = self.socket.recv(response_len)
 
-        return extract_board_state(server_response)
+            return extract_board_state(server_response)
+        except ConnectionResetError:
+            return None
 
     def close(self):
         """

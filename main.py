@@ -50,12 +50,12 @@ def main():
 
     player = RandomPlayer(role, b)
 
-    _from, _to = player.play()
-    b = b.apply_move(_from, _to, player.role)
-    b.print_grid()
-    _from, _to = player.play()
-    b = b.apply_move(_from, _to, player.role)
-    b.print_grid()
+    # _from, _to = player.play()
+    # b = b.apply_move(_from, _to, player.role)
+    # b.print_grid()
+    # _from, _to = player.play()
+    # b = b.apply_move(_from, _to, player.role)
+    # b.print_grid()
 
     """
     Game loop:
@@ -67,19 +67,22 @@ def main():
         4) update board with M'
     """
 
-    """
     if role == "BLACK":
         new_state = conn.receive_new_state()
         b.update_state(new_state)
-    
-    while True:
+
+    receive_failed = False
+    while not receive_failed:
         f,t = player.play()
         conn.send_move(f, t)
         new_state = conn.receive_new_state()
-        b.update_state(new_state)
-    """
-    conn.close()
+        receive_failed = new_state is None
 
+        if not receive_failed:
+            b.update_state(new_state)
+
+    ic("Game done!")
+    conn.close()
     return 0
 
 if __name__ == "__main__":
