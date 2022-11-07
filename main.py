@@ -7,7 +7,7 @@ from board import Board
 from connect import Connection, get_player_port
 from player import RandomPlayer
 
-CLIENT_NAME = "Besugo"
+CLIENT_NAME = "Gayblut"
 
 def main():
     ic("Tablut client")
@@ -72,14 +72,21 @@ def main():
         b.update_state(new_state)
 
     receive_failed = False
-    while not receive_failed:
-        f,t = player.play()
-        conn.send_move(f, t)
-        new_state = conn.receive_new_state()
-        receive_failed = new_state is None
+    game_over = False
+    while not receive_failed and not game_over:
+        move = player.play()
+        if len(move) == 0:
+            # The player can't find any moves to play
+            game_over = True
+        else:
+            f,t = move
+            conn.send_move(f, t)
+            new_state = conn.receive_new_state()
+            receive_failed = new_state is None
 
-        if not receive_failed:
-            b.update_state(new_state)
+            if not receive_failed:
+                b.update_state(new_state)
+                game_over = b.is_game_over()
 
     ic("Game done!")
     conn.close()
