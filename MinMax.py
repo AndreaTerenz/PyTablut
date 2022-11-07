@@ -28,6 +28,7 @@ def get_children(player):
     elif player.role == CheckerType.BLACK:
         checkers= player.board.blacks
     moves=[[] for i in range(len(checkers))]
+
     return []
 
 

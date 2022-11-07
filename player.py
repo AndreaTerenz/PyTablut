@@ -22,7 +22,7 @@ class BasePlayer(ABC):
             self.role = CheckerType.BLACK
             self.opponent = CheckerType.WHITE
 
-        self.chosen_checker = (0,3)
+        self.chosen_checker =()
         self.chosen_move = (2,3)
 
     def play(self):
@@ -109,17 +109,7 @@ class BasePlayer(ABC):
 
         ciao = board_copy.grid[self.chosen_checker].checker
         board_copy.grid[self.chosen_checker].checker = CheckerType.EMPTY #tolgo il checker dalla posizione vecchia
-
-        print("during function state #1: ")
         board_copy.print_grid()
-        # for i in range(9):
-        #     for j in range(9):
-        #         print(f"{board_copy.grid[i][j].type.value};{board_copy.grid[i][j].checker.value} ", end=" ")
-        #     print()
-        ic(ciao)
-        ic(self.chosen_checker, self.chosen_move)
-        ic(board_copy.grid[self.chosen_move].checker)
-        ic(board_copy.grid[(0,0)].checker)
         board_copy.grid[self.chosen_move].checker = ciao #metto il checker nella nuova posizione
 
         ic(board_copy.grid[self.chosen_move].checker)
