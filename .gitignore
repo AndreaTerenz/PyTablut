@@ -286,3 +286,4 @@ cython_debug/
 /.idea/PyTablut.iml
 /.idea/vcs.xml
 /.idea/other.xml
+/.vscode/

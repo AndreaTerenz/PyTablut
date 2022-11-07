@@ -11,10 +11,10 @@ CLIENT_NAME = "Gayblut"
 
 def main():
     ic("Tablut client")
-
+    
     ####
     # Reading command line arguments
-
+    
     parser = ArgumentParser()
 
     parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')")

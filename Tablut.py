@@ -10,6 +10,7 @@ class Tablut(ag.Game):
         
     def actions(self, state):
         """Return a list of the allowable moves at this point."""
+        
         raise NotImplementedError
 
 
@@ -70,10 +71,10 @@ class Tablut(ag.Game):
 
 
     def display(self, state):
+        print(state)
         
-        
-
-
     def __repr__(self):
         return '<{}>'.format(self.__class__.__name__)
+    
+        
         
