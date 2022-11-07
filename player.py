@@ -16,14 +16,10 @@ class BasePlayer(ABC):
         self.role = role
         self.board = board
 
-        #FIXME: Chiama l'800 6969 per donare un euro alla lotta contro
-        # l'uso di CheckerType per indicare il ruolo del player...
         if self.role == "WHITE":
-            self.role = CheckerType.WHITE
-            self.opponent = CheckerType.BLACK # avversario
+            self.opponent = "BLACK" # avversario
         else:
-            self.role = CheckerType.BLACK
-            self.opponent = CheckerType.WHITE
+            self.opponent = "WHITE"
 
         self.old_pos = (0, 3)
         self.new_pos = (2, 3)
@@ -36,9 +32,9 @@ class BasePlayer(ABC):
         """
 
         move = None
-        if self.role == CheckerType.WHITE:
+        if self.role == "WHITE":
             move = self.play_white()
-        elif self.role == CheckerType.BLACK:
+        elif self.role == "BLACK":
             move = self.play_black()
 
         return move
@@ -61,11 +57,11 @@ class BasePlayer(ABC):
 
         dest_cell_type = self.board.grid[destination_r, destination_c].type
 
-        if self.role == CheckerType.WHITE:
+        if self.role == "WHITE":
             # Deve essere VUOTA
             # Puo' essere una cella NORMAL o una ESCAPE
             return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]
-        elif self.role == CheckerType.BLACK:
+        elif self.role == "BLACK":
             if self.board.grid[start_r, start_c].type == CellType.CAMP:
                 # Deve essere VUOTA
                 # Non puo' essere il CASTLE
@@ -106,7 +102,7 @@ class RandomPlayer(BasePlayer):
         """
 
         # Get the list of your checkers
-        your_checkers = self.board.whites if self.role == CheckerType.WHITE else self.board.blacks
+        your_checkers = self.board.whites if self.role == "WHITE" else self.board.blacks
         # shuffle your checkers in a random order
         rnd.shuffle(your_checkers)
 

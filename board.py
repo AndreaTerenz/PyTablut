@@ -150,7 +150,7 @@ class Board:
                     self.grid[i][j].checker = CheckerType.KING
                     self.king = (i,j)
 
-    def apply_move(self, from_cell, to_cell, role):
+    def apply_move(self, from_cell, to_cell, _role):
         """
         Returns a COPY of the board in which a checker has been moved from
         'from_cell' to 'to_cell', checking also if any enemy checkers are taken
@@ -158,7 +158,7 @@ class Board:
 
         :param from_cell:
         :param to_cell:
-        :param role:
+        :param _role:
         :return:
         """
 
@@ -186,7 +186,8 @@ class Board:
 
         eaten_checkers = [] #lista delle cordinate delle pedine che verranno mangiate muahahah
 
-        opponent = (CheckerType.BLACK if role == CheckerType.WHITE else CheckerType.WHITE)
+        role = (CheckerType.WHITE if _role == "WHITE" else CheckerType.BLACK)
+        opponent = (CheckerType.BLACK if _role == "WHITE" else CheckerType.WHITE)
 
         # riga/colonna devono essere piu' di 1 e meno di 7, perche' ci vogliono
         # due celle di spazio per poter mangiare in ogni direzione (una per la pedina
