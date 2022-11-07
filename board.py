@@ -151,7 +151,7 @@ class Board:
                     self.grid[i][j].checker = CheckerType.KING
                     self.king = (i,j)
 
-    def apply_move(self, from_cell, to_cell, role):
+    def apply_move(self, from_cell, to_cell, _role):
         """
         Returns a COPY of the board in which a checker has been moved from
         'from_cell' to 'to_cell', checking also if any enemy checkers are taken
@@ -159,7 +159,7 @@ class Board:
 
         :param from_cell:
         :param to_cell:
-        :param role:
+        :param _role:
         :return:
         """
 
@@ -187,7 +187,8 @@ class Board:
 
         eaten_checkers = [] #lista delle cordinate delle pedine che verranno mangiate muahahah
 
-        opponent = (CheckerType.BLACK if role == CheckerType.WHITE else CheckerType.WHITE)
+        role = (CheckerType.WHITE if _role == "WHITE" else CheckerType.BLACK)
+        opponent = (CheckerType.BLACK if _role == "WHITE" else CheckerType.WHITE)
 
         # riga/colonna devono essere piu' di 1 e meno di 7, perche' ci vogliono
         # due celle di spazio per poter mangiare in ogni direzione (una per la pedina
@@ -279,7 +280,50 @@ class Board:
 
         return True
 
+    def is_game_over(self):
+        """
+        Checks if the current state of the grid is terminal (the game is over)
+
+        :return: True if the game is over
+        """
+        # King in an escape tile?
+        if self.grid[self.king].type == CellType.ESCAPE:
+            return True
+
+        king_r, king_c = self.king
+        black_king_neighbors = 0
+        borders_castle = 0
+
+        # Count how many blacks borders the kings
+        # and "how many castles" (either 0 or 1, obv)
+        neighbors = [(king_r-1,king_c),(king_r+1,king_c),(king_r,king_c-1),(king_r,king_c+1)]
+        for n in neighbors:
+            r,c = n
+            if 0 <= r <= 8 and 0 <= c <= 8:
+                is_black = self.grid[r,c].checker == CheckerType.BLACK
+                is_castle = self.grid[r,c].type == CellType.CASTLE
+                black_king_neighbors += int(is_black)
+                borders_castle += int(is_castle)
+
+        if self.grid[self.king].type == CellType.CASTLE and black_king_neighbors == 4:
+            # 4 blacks have surrounded the king in the castle
+            return True
+        elif borders_castle > 0 and black_king_neighbors == 3:
+            # 3 blacks have surrounded the king near the castle
+            return True
+        elif black_king_neighbors >= 2:
+            # 2 blacks have surrounded the king
+            return True
+
+        return False
+
     def copy(self):
+        """
+        Create a DEEP copy of the board
+
+        :return: a Board object with the same state as self
+        """
+
         board_copy = Board()
 
         for i in range(9):

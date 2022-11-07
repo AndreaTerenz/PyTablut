@@ -16,14 +16,10 @@ class BasePlayer(ABC):
         self.role = role
         self.board = board
 
-        #FIXME: Chiama l'800 6969 per donare un euro alla lotta contro
-        # l'uso di CheckerType per indicare il ruolo del player...
         if self.role == "WHITE":
-            self.role = CheckerType.WHITE
-            self.opponent = CheckerType.BLACK # avversario
+            self.opponent = "BLACK" # avversario
         else:
-            self.role = CheckerType.BLACK
-            self.opponent = CheckerType.WHITE
+            self.opponent = "WHITE"
 
         self.old_pos = (0, 3)
         self.new_pos = (2, 3)
@@ -36,9 +32,9 @@ class BasePlayer(ABC):
         """
 
         move = None
-        if self.role == CheckerType.WHITE:
+        if self.role == "WHITE":
             move = self.play_white()
-        elif self.role == CheckerType.BLACK:
+        elif self.role == "BLACK":
             move = self.play_black()
 
         return move
@@ -61,11 +57,11 @@ class BasePlayer(ABC):
 
         dest_cell_type = self.board.grid[destination_r, destination_c].type
 
-        if self.role == CheckerType.WHITE:
+        if self.role == "WHITE":
             # Deve essere VUOTA
             # Puo' essere una cella NORMAL o una ESCAPE
             return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]
-        elif self.role == CheckerType.BLACK:
+        elif self.role == "BLACK":
             if self.board.grid[start_r, start_c].type == CellType.CAMP:
                 # Deve essere VUOTA
                 # Non puo' essere il CASTLE
@@ -93,6 +89,50 @@ class BasePlayer(ABC):
         """
         pass
 
+    def moves_for_cell(self, r, c):
+        """
+        Compute list of all possible legal moves for a checker in (r,c)
+
+        :param r: checker row
+        :param c: checker column
+        :return: List of legal moves
+        """
+        moves = []
+
+        """
+        moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c-1,-1,-1))]
+        moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c + 1, 9))]
+        moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r - 1, -1, -1))]
+        moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r + 1, 9))]
+        """
+
+        # Explore left
+        for j in range(c - 1, -1, -1):
+            if self.check_move(r, j, r, c):
+                moves.append((r, j))
+            else:
+                break
+        # Explore right
+        for j in range(c + 1, 9):
+            if self.check_move(r, j, r, c):
+                moves.append((r, j))
+            else:
+                break
+        # Explore up
+        for i in range(r - 1, -1, -1):
+            if self.check_move(i, c, r, c):
+                moves.append((i, c))
+            else:
+                break
+        # Explore down
+        for i in range(r + 1, 9):
+            if self.check_move(i, c, r, c):
+                moves.append((i, c))
+            else:
+                break
+
+        return ic(moves)
+
 class RandomPlayer(BasePlayer):
     """
     Random player - at every turn, picks a random checker and returns a random move for it
@@ -106,7 +146,7 @@ class RandomPlayer(BasePlayer):
         """
 
         # Get the list of your checkers
-        your_checkers = self.board.whites if self.role == CheckerType.WHITE else self.board.blacks
+        your_checkers = self.board.whites if self.role == "WHITE" else self.board.blacks
         # shuffle your checkers in a random order
         rnd.shuffle(your_checkers)
 
@@ -115,42 +155,7 @@ class RandomPlayer(BasePlayer):
         for random_checker in your_checkers:
             r = random_checker[0]
             c = random_checker[1]
-
-            moves = []
-
-            """
-            moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c-1,-1,-1))]
-            moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c + 1, 9))]
-            moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r - 1, -1, -1))]
-            moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r + 1, 9))]
-            """
-
-            # Explore left
-            for j in range(c - 1, -1, -1):
-                if self.check_move(r, j, r, c):
-                    moves.append((r, j))
-                else:
-                    break
-            # Explore right
-            for j in range(c + 1, 9):
-                if self.check_move(r,j,r,c):
-                    moves.append((r,j))
-                else:
-                    break
-            # Explore up
-            for i in range(r - 1, -1, -1):
-                if self.check_move(i,c,r,c):
-                    moves.append((i,c))
-                else:
-                    break
-            # Explore down
-            for i in range(r + 1, 9):
-                if self.check_move(i,c,r,c):
-                    moves.append((i,c))
-                else:
-                    break
-
-            ic(moves)
+            moves = self.moves_for_cell(r, c)
 
             if len(moves) > 0:
                 output_move = ic(rnd.choice(moves))
