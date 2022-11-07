@@ -89,6 +89,50 @@ class BasePlayer(ABC):
         """
         pass
 
+    def moves_for_cell(self, r, c):
+        """
+        Compute list of all possible legal moves for a checker in (r,c)
+
+        :param r: checker row
+        :param c: checker column
+        :return: List of legal moves
+        """
+        moves = []
+
+        """
+        moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c-1,-1,-1))]
+        moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c + 1, 9))]
+        moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r - 1, -1, -1))]
+        moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r + 1, 9))]
+        """
+
+        # Explore left
+        for j in range(c - 1, -1, -1):
+            if self.check_move(r, j, r, c):
+                moves.append((r, j))
+            else:
+                break
+        # Explore right
+        for j in range(c + 1, 9):
+            if self.check_move(r, j, r, c):
+                moves.append((r, j))
+            else:
+                break
+        # Explore up
+        for i in range(r - 1, -1, -1):
+            if self.check_move(i, c, r, c):
+                moves.append((i, c))
+            else:
+                break
+        # Explore down
+        for i in range(r + 1, 9):
+            if self.check_move(i, c, r, c):
+                moves.append((i, c))
+            else:
+                break
+
+        return ic(moves)
+
 class RandomPlayer(BasePlayer):
     """
     Random player - at every turn, picks a random checker and returns a random move for it
@@ -111,42 +155,7 @@ class RandomPlayer(BasePlayer):
         for random_checker in your_checkers:
             r = random_checker[0]
             c = random_checker[1]
-
-            moves = []
-
-            """
-            moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c-1,-1,-1))]
-            moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c + 1, 9))]
-            moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r - 1, -1, -1))]
-            moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r + 1, 9))]
-            """
-
-            # Explore left
-            for j in range(c - 1, -1, -1):
-                if self.check_move(r, j, r, c):
-                    moves.append((r, j))
-                else:
-                    break
-            # Explore right
-            for j in range(c + 1, 9):
-                if self.check_move(r,j,r,c):
-                    moves.append((r,j))
-                else:
-                    break
-            # Explore up
-            for i in range(r - 1, -1, -1):
-                if self.check_move(i,c,r,c):
-                    moves.append((i,c))
-                else:
-                    break
-            # Explore down
-            for i in range(r + 1, 9):
-                if self.check_move(i,c,r,c):
-                    moves.append((i,c))
-                else:
-                    break
-
-            ic(moves)
+            moves = self.moves_for_cell(r, c)
 
             if len(moves) > 0:
                 output_move = ic(rnd.choice(moves))
