@@ -9,12 +9,7 @@ from player import RandomPlayer
 
 CLIENT_NAME = "Gayblut"
 
-def main():
-    ic("Tablut client")
-    
-    ####
-    # Reading command line arguments
-    
+def parse_arguments():
     parser = ArgumentParser()
 
     parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')")
@@ -26,18 +21,22 @@ def main():
 
     role = args.role
     ip = args.ip
+    skip_conn = args.skip_connection
 
     port = args.port
     if not port:
         port = get_player_port(role)
 
-    ic(role, ip, port)
+    return role, ip, port, skip_conn
 
-    ####
+def main():
+    ic("Tablut client")
+
+    role, ip, port, skip_conn = parse_arguments()
 
     conn = Connection(CLIENT_NAME, role, server_ip=ip, server_port=port)
 
-    if not args.skip_connection:
+    if not skip_conn:
         try:
             conn.connect_to_server()
         except:
