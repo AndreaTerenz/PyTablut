@@ -4,7 +4,6 @@ import numpy as np
 from icecream import ic
 
 
-
 class CellType(Enum):
     """
     Possible board cell types
@@ -24,6 +23,17 @@ class CheckerType(Enum):
     WHITE = 1
     BLACK = 2
     KING = 3
+
+    def __str__(self):
+        match self:
+            case CheckerType.EMPTY:
+                return "EMPTY"
+            case CheckerType.WHITE:
+                return "WHITE"
+            case CheckerType.BLACK:
+                return "BLACK"
+            case CheckerType.KING:
+                return "KING"
 
 class Cell:
     """
@@ -335,3 +345,19 @@ class Board:
         board_copy.king = self.king
 
         return board_copy
+
+    def to_string_grid(self):
+        """
+        Converts the board's grid to a 2D matrix of strings representing the
+        checker in each cell (EMPTY, WHITE, KING or BLACK)
+
+        :return: a 2D matrix of strings
+        """
+
+        output = [[""] * 9] * 9
+
+        for i in range(9):
+            for j in range(9):
+                output[i][j] = str(self.grid[i,j].checker)
+
+        return output

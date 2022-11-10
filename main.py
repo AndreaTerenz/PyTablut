@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 
 from icecream import ic
 
+from Tablut import Tablut
 from board import Board
 from connect import Connection, get_player_port
 from player import RandomPlayer
@@ -46,6 +47,7 @@ def main():
 
     b = Board()
     b.print_grid()
+    print(b.to_string_grid())
 
     player = RandomPlayer(role, b)
 
@@ -65,6 +67,8 @@ def main():
         3) receive opponent move M'
         4) update board with M'
     """
+
+    tablut_game = Tablut()
 
     if role == "BLACK":
         new_state = conn.receive_new_state()
