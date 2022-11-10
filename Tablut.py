@@ -6,12 +6,25 @@ import numpy as np
 
 class Tablut(ag.Game):
     def __init__(self,player):
-        self.initial=ag.GameState(to_move=player.board.role,utility=0,board=player.board.grid,moves=[(0,0),(0,0)])
+        self.initial=ag.GameState(to_move=player.role,utility=0,board=player.board.grid,moves=[(0,0),(0,0)])
         
     def actions(self, state):
         """Return a list of the allowable moves at this point."""
-        
-        raise NotImplementedError
+        moves = list()
+        if self.initial.to_move == "WHITE":
+            for checker in self.player.board.whites:
+                r, c = checker
+                checker_moves = self.player.moves_for_cell(r, c)
+                moves.append(checker_moves)
+            return moves
+
+        elif self.initial.to_move == "BLACK":
+            for checker in self.player.board.blacks:
+                r, c = checker
+                checker_moves = self.player.moves_for_cell(r,c)
+            moves.append(checker_moves)
+            return moves
+
 
 
     def result(self, state, move):
@@ -32,7 +45,7 @@ class Tablut(ag.Game):
                 enemies_in_row+=1
                 break
         if enemies_in_row != 0 and enemies_in_column != 0:
-            return -int(enemies_in_row+enemies_in_column)
+            return enemies_in_row+enemies_in_column
         else :
             return 0
     
@@ -50,7 +63,7 @@ class Tablut(ag.Game):
             param0=9/min_d_to_escapes
             param1=16-Nenemies
             param2=self.__king_in_danger(state)
-            return param0+param1+param2
+            return param0+param1-param2
         if player == "BLACK":
             if king[0]==100 and king[1]==100:
                     return +np.inf
