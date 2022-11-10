@@ -6,7 +6,7 @@ import numpy as np
 
 class Tablut(ag.Game):
     def __init__(self,player):
-        self.initial=ag.GameState(to_move=player.role,utility=0,board=player.board.grid,moves=[(0,0),(0,0)])
+        self.initial=ag.GameState(to_move=player.board.role,utility=0,board=player.board.grid,moves=[(0,0),(0,0)])
         
     def actions(self, state):
         """Return a list of the allowable moves at this point."""
@@ -26,10 +26,12 @@ class Tablut(ag.Game):
             return moves
 
 
-
     def result(self, state, move):
         """Return the state that results from making a move from a state."""
-        raise NotImplementedError
+        move_from=move[0]
+        move_to=move[1]
+        board=state.apply_move(move_from,move_to,self.initial.to_move)
+        return board.grid
     
     
     def __king_in_danger(state):
@@ -45,7 +47,7 @@ class Tablut(ag.Game):
                 enemies_in_row+=1
                 break
         if enemies_in_row != 0 and enemies_in_column != 0:
-            return enemies_in_row+enemies_in_column
+            return -int(enemies_in_row+enemies_in_column)
         else :
             return 0
     
@@ -75,7 +77,7 @@ class Tablut(ag.Game):
 
     def terminal_test(self, state):
         """Return True if this is a final state for the game."""
-        return not self.actions(state)
+        return state.is_game_over()
 
 
     def to_move(self, state):
@@ -84,7 +86,7 @@ class Tablut(ag.Game):
 
 
     def display(self, state):
-        print(state)
+        state.print_grid()
         
     def __repr__(self):
         return '<{}>'.format(self.__class__.__name__)
