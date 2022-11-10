@@ -82,7 +82,7 @@ class Tablut(ag.Game):
 
     def to_move(self, state):
         """Return the player whose move it is in this state."""
-        return state.to_move
+        return self.initial.to_move
 
 
     def display(self, state):
