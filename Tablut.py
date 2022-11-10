@@ -1,36 +1,41 @@
-import aima.games as ag 
-from player import BasePlayer
-from board import Board, CheckerType, CellType
 import numpy as np
+
+import aima.games as ag
+from board import CheckerType, CellType
 
 
 class Tablut(ag.Game):
     def __init__(self,player):
-        self.initial=ag.GameState(to_move=player.board.role,utility=0,board=player.board.grid,moves=[(0,0),(0,0)])
-        self.board=player.board
+        self.player = player
+        self.board = player.board
+        self.initial=ag.GameState(to_move=player.role,utility=self.utility(self.board, player.role),board=player.board.grid,moves=self.actions(player.board))
+
     def actions(self, state):
         """Return a list of the allowable moves at this point."""
         moves = list()
-        if self.initial.to_move == "WHITE":
+        if self.player.role == "WHITE":
             for checker in self.player.board.whites:
                 r, c = checker
                 checker_moves = self.player.moves_for_cell(r, c)
-                moves.append(checker_moves)
-            return moves
+                to_append = [[(r,c), move] for move in checker_moves]
+                moves += to_append
 
-        elif self.initial.to_move == "BLACK":
+        elif self.player.role == "BLACK":
             for checker in self.player.board.blacks:
                 r, c = checker
                 checker_moves = self.player.moves_for_cell(r,c)
-            moves.append(checker_moves)
-            return moves
+                to_append = [[(r,c), move] for move in checker_moves]
+                moves += to_append
+
+        return moves
 
 
     def result(self, state, move):
         """Return the state that results from making a move from a state."""
         move_from=move[0]
         move_to=move[1]
-        board_result=self.board.apply_move(move_from,move_to,self.initial.to_move)
+        #print(move, "|", move_from, "|", move_to)
+        board_result=self.board.apply_move((move_from),move_to,self.initial.to_move)
         return board_result.to_string_grid()
     
     
@@ -59,13 +64,14 @@ class Tablut(ag.Game):
     
 
     def utility(self, state, player):
+
         king = self.board.king
         if player == "WHITE":
             if king[0]==100 and king[1]==100:
                 return -np.inf
         #se il king è nell'escape ritorna piu infinito
             escapes = self.board.grid[CellType.ESCAPE,CheckerType.EMPTY]
-            d_to_escapes = np.array([np.linalg.norm(king-i,2) for i in escapes])
+            d_to_escapes = np.array([np.linalg.norm(king-e,2) for e in escapes])
             min_d_to_escapes = int(np.min(d_to_escapes))    
             Nenemies=len(self.board.blacks)
             param0=9/min_d_to_escapes
@@ -76,7 +82,7 @@ class Tablut(ag.Game):
             if king[0]==100 and king[1]==100:
                     return +np.inf
             blacks=self.board.blacks
-            distances=np.array([np.linalg.norm(king-i,2) for i in blacks])
+            distances=np.array([np.linalg.norm((np.array(king)-np.array(b)),2) for b in blacks])
             d_mean=int(np.mean(distances))
             Nenemies = 9-len(self.board.whites)
             return Nenemies+d_mean
@@ -88,7 +94,7 @@ class Tablut(ag.Game):
 
     def to_move(self, state):
         """Return the player whose move it is in this state."""
-        return self.board.initial.to_move
+        return self.initial.to_move
 
 
     def display(self, state):

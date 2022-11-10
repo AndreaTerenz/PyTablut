@@ -3,6 +3,8 @@ from enum import Enum
 import numpy as np
 from icecream import ic
 
+ic.disable()
+
 
 class CellType(Enum):
     """
@@ -174,7 +176,6 @@ class Board:
         """
 
         output = self.copy()
-
         checker_to_move = output.grid[from_cell].checker
 
         output.set_checker_at_pos(to_cell, checker_to_move)
@@ -207,16 +208,16 @@ class Board:
         # caso del re
         row_k, column_k = output.king
         king_neighbors = list()
-        king_neighbors.append([output.grid[row_k,column_k - 1], output.grid[row_k - 1,column_k], \
-                output.grid[row_k,column_k + 1], output.grid[row_k + 1,column_k]])
+        king_neighbors.append([output.grid[row_k,column_k - 1], output.grid[row_k - 1,column_k],
+                               output.grid[row_k,column_k + 1], output.grid[row_k + 1,column_k]])
 
         blacks = king_neighbors.count(Cell(CellType.NORMAL, CheckerType.BLACK))
         castles = king_neighbors.count(Cell(CellType.CASTLE, CheckerType.EMPTY))
 
         if blacks == 4:
-            output.king(100,100)
+            output.king = (100,100)
         elif blacks == 3 and castles == 1:
-            output.king(100,100)
+            output.king = (100,100)
 
         if column > 1:
             if output.grid[row, column - 1].checker == opponent:
@@ -248,7 +249,8 @@ class Board:
                 if output.grid[row + 2, column].checker == role or output.grid[row + 2, column].type in [CellType.CAMP,CellType.CASTLE]:
                     self.king = (100, 100)
 
-        ic(f"Eaten checkers: {eaten_checkers}")
+        if len(eaten_checkers) > 0:
+            ic(f"Eaten checkers: {eaten_checkers}")
         # rimuovo le pedine mangiate
         for coordinate in eaten_checkers:
             output.set_checker_at_pos(coordinate, CheckerType.EMPTY)
