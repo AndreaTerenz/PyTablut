@@ -31,7 +31,8 @@ class Tablut(ag.Game):
         move_from=move[0]
         move_to=move[1]
         board=state.apply_move(move_from,move_to,self.initial.to_move)
-        return board.grid
+        return board.to_string_grid()
+    
     
     
     def __king_in_danger(state):
