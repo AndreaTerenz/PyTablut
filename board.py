@@ -120,18 +120,18 @@ class Board:
                     print(f"{cell_type.value};{checker_type.value} ", end=" ")
                 else:
                     char_to_print = " "
-
-                    if checker_type == CheckerType.KING:
-                        char_to_print = "K"
-                    elif checker_type == CheckerType.BLACK:
-                        char_to_print = "B"
-                    elif checker_type == CheckerType.WHITE:
-                        char_to_print = "W"
-                    else:
-                        # Everything here applies only to EMPTY cells
-                        char_to_print = " "
-                        if cell_type == CellType.ESCAPE:
-                            char_to_print = "-"
+                    match checker_type:
+                        case CheckerType.KING:
+                            char_to_print = "K"
+                        case CheckerType.BLACK:
+                            char_to_print = "B"
+                        case CheckerType.WHITE:
+                            char_to_print = "W"
+                        # default case
+                        case _:
+                            # Everything here applies only to EMPTY cells
+                            if cell_type == CellType.ESCAPE:
+                                char_to_print = "-"
 
                     print(char_to_print, end=" ")
             print()
@@ -150,18 +150,18 @@ class Board:
                 # Cella di turno da leggere
                 server_cell = server_state[i][j]
 
-                #FIXME: PIVI AGGIORNA PYTHON
-                if server_cell == "EMPTY":
-                    self.grid[i][j].checker = CheckerType.EMPTY
-                elif server_cell == "WHITE":
-                    self.grid[i][j].checker = CheckerType.WHITE
-                    self.whites.append((i,j))
-                elif server_cell == "BLACK":
-                    self.grid[i][j].checker = CheckerType.BLACK
-                    self.blacks.append((i, j))
-                elif server_cell == "KING":
-                    self.grid[i][j].checker = CheckerType.KING
-                    self.king = (i,j)
+                match server_cell:
+                    case "EMPTY":
+                        self.grid[i][j].checker = CheckerType.EMPTY
+                    case "WHITE":
+                        self.grid[i][j].checker = CheckerType.WHITE
+                        self.whites.append((i,j))
+                    case "BLACK":
+                        self.grid[i][j].checker = CheckerType.BLACK
+                        self.blacks.append((i, j))
+                    case "KING":
+                        self.grid[i][j].checker = CheckerType.KING
+                        self.king = (i,j)
 
     def apply_move(self, from_cell, to_cell, _role):
         """

@@ -1,5 +1,6 @@
 import sys
 from argparse import ArgumentParser
+from time import time
 
 from icecream import ic
 
@@ -14,16 +15,19 @@ CLIENT_NAME = "StreetKing"
 def parse_arguments():
     parser = ArgumentParser()
 
-    parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')")
+    parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')", choices=["BLACK", "WHITE"])
     parser.add_argument("-p", "--port", help="Server connection port (defaults to 5800 for WHITE and 5801 for BLACK)", type=int)
     parser.add_argument("-i", "--ip", help="Server IP address (defaults to localhost)", default="localhost")
-    parser.add_argument("--skip-connection", help="If provided, ignore failed connection to server (useful in debug/development)", action="store_true")
+    parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally", action="store_true")
+    parser.add_argument("--skip-connection",
+                        help="[DEPRECATED, USE --local] If provided, ignore failed connection to server",
+                        action="store_true")
 
     args = parser.parse_args()
 
     role = args.role
     ip = args.ip
-    skip_conn = args.skip_connection
+    skip_conn = args.local or args.skip_connection
 
     port = args.port
     if not port:
@@ -86,59 +90,25 @@ def main():
     else:
         ic("Connection to server skipped")
 
-        print("______________________________________")
-        culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
-        move = alpha_beta_cutoff_search(culo, tablut, 1)
-        print(move)
-        _from, _to = move[0], move[1]
-        b.print_grid()
-        moves_A = tablut.actions(b)
-        blacks_A = b.blacks
-        b = b.apply_move(_from, _to, player.role)
-        tablut.player.board = b
-        b.print_grid()
+        for i in range(6):
+            # Alternate black and white
+            turn = player.role if (i%2) == 0 else player.opponent
 
-        print("______________________________________")
-        culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
-        move = alpha_beta_cutoff_search(culo, tablut, 1)
-        print(move)
-        _from, _to = move[0], move[1]
-        b.print_grid()
+            print(f"--------{turn}--------")
+            tablut.board = b
+            tablut.role = turn
+            culo = GameState(to_move=turn, utility=tablut.utility(b, turn), board=b, moves=tablut.actions(b))
 
-        moves_B = tablut.actions(b)
-        blacks_B = b.blacks
-        b = b.apply_move(_from, _to, player.role)
-        tablut.player.board = b
-        b.print_grid()
+            print("Searching move...")
+            before = time()
+            move = alpha_beta_cutoff_search(culo, tablut, 2)
+            after = time()
+            _from, _to = move[0], move[1]
+            b = b.apply_move(_from, _to, turn)
 
-        print("______________________________________")
-        culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
-        move = alpha_beta_cutoff_search(culo, tablut, 1)
-        print(move)
-        _from, _to = move[0], move[1]
-        b.print_grid()
+            print(f"Suggested move: {move} ({after - before} s)")
+            b.print_grid()
 
-        moves_B = tablut.actions(b)
-        blacks_B = b.blacks
-        b = b.apply_move(_from, _to, player.role)
-        tablut.player.board = b
-        b.print_grid()
-
-        print("______________________________________")
-        culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
-        move = alpha_beta_cutoff_search(culo, tablut, 1)
-        print(move)
-        _from, _to = move[0], move[1]
-        b.print_grid()
-
-        moves_B = tablut.actions(b)
-        blacks_B = b.blacks
-        b = b.apply_move(_from, _to, player.role)
-        tablut.player.board = b
-        b.print_grid()
-
-        print(blacks_A)
-        print(blacks_B)
     return 0
 
 if __name__ == "__main__":

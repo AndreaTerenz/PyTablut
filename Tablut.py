@@ -8,27 +8,23 @@ class Tablut(ag.Game):
     def __init__(self,player):
         self.player = player
         self.board = player.board
-        self.initial=ag.GameState(to_move=player.role,utility=self.utility(self.board, player.role),board=player.board.grid,moves=self.actions(player.board))
+        self.role = player.role
+        self.opponent = player.opponent
+
+        self.initial=ag.GameState(to_move=self.role,utility=self.utility(self.board, self.role),board=self.board.grid,moves=self.actions(self.board))
 
     def actions(self, state): #il problema è qui, per qualche ragione questa funzione restituisce sempre la stessa lista di mosse possibili
         """Return a list of the allowable moves at this point."""
-        moves = list()
-        if self.player.role == "WHITE":
-            for checker in self.player.board.whites:
-                r, c = checker
-                checker_moves = self.player.moves_for_cell(r, c)
-                to_append = [[(r,c), move] for move in checker_moves]
-                moves += to_append
+        moves = []
+        checkers = self.board.whites + [self.board.king] if self.role == "WHITE" else self.board.blacks
 
-        elif self.player.role == "BLACK":
-            for checker in self.player.board.blacks:
-                r, c = checker
-                checker_moves = self.player.moves_for_cell(r,c)
-                to_append = [[(r,c), move] for move in checker_moves]
-                moves += to_append
+        for checker in checkers:
+            r, c = checker
+            checker_moves = self.player.moves_for_cell(r, c)
+            to_append = [[(r, c), move] for move in checker_moves]
+            moves += to_append
 
         return moves
-
 
     def result(self, state, move):
         """Return the state that results from making a move from a state."""
@@ -68,15 +64,21 @@ class Tablut(ag.Game):
         king = self.board.king
         if player == "WHITE":
             if king[0]==100 and king[1]==100:
+                # se il king è nell'escape ritorna piu infinito
                 return -np.inf
-        #se il king è nell'escape ritorna piu infinito
-            escapes = self.board.grid[CellType.ESCAPE,CheckerType.EMPTY]
-            d_to_escapes = np.array([np.linalg.norm(king-e,2) for e in escapes])
-            min_d_to_escapes = int(np.min(d_to_escapes))    
+
+            gr = self.board.grid
+            escapes = [(i,j) for i in range(9) for j in range(9)
+                        if gr[i,j].type == CellType.ESCAPE and gr[i,j].checker == CheckerType.EMPTY]
+
+            d_to_escapes = np.array([np.linalg.norm(np.array(king)-np.array(e),2) for e in escapes])
+            min_d_to_escapes = int(np.min(d_to_escapes))
+
             Nenemies=len(self.board.blacks)
             param0=9/min_d_to_escapes
             param1=16-Nenemies
             param2=self.__king_in_danger(self.board)
+
             return param0+param1-param2
         if player == "BLACK":
             if king[0]==100 and king[1]==100:
