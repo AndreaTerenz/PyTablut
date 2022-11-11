@@ -63,23 +63,28 @@ class Tablut(ag.Game):
 
         king = self.board.king
         if player == "WHITE":
-            if king[0]==100 and king[1]==100:
+            if king[0] == 100 and king[1] == 100:
                 # se il king è nell'escape ritorna piu infinito
                 return -np.inf
 
             gr = self.board.grid
-            escapes = [(i,j) for i in range(9) for j in range(9)
-                        if gr[i,j].type == CellType.ESCAPE and gr[i,j].checker == CheckerType.EMPTY]
+            esc = [(0, 1), (0, 2), (0, 6), (0, 7),
+                   (1, 0), (1, 8),
+                   (2, 0), (2, 8),
+                   (6, 0), (6, 8),
+                   (7, 0), (7, 8),
+                   (8, 1), (8, 2), (8, 6), (8, 7), ]
+            escapes = [e for e in esc if gr[e].type == CellType.ESCAPE and gr[e].checker == CheckerType.EMPTY]
 
-            d_to_escapes = np.array([np.linalg.norm(np.array(king)-np.array(e),2) for e in escapes])
+            d_to_escapes = np.array([np.linalg.norm(np.array(king) - np.array(e), 2) for e in escapes])
             min_d_to_escapes = int(np.min(d_to_escapes))
 
-            Nenemies=len(self.board.blacks)
-            param0=9/min_d_to_escapes
-            param1=16-Nenemies
-            param2=self.__king_in_danger(self.board)
+            Nenemies = len(self.board.blacks)
+            param0 = 9 / min_d_to_escapes
+            param1 = 16 - Nenemies
+            param2 = self.__king_in_danger(self.board)
 
-            return param0+param1-param2
+            return param0 + param1 - param2
         if player == "BLACK":
             if king[0]==100 and king[1]==100:
                     return +np.inf

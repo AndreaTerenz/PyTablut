@@ -5,7 +5,7 @@ from time import time
 from icecream import ic
 
 from Tablut import Tablut
-from aima.games import GameState, alpha_beta_cutoff_search
+from aima.games import GameState, alpha_beta_cutoff_search, alpha_beta_search
 from board import Board
 from connect import Connection, get_player_port
 from player import RandomPlayer
@@ -18,7 +18,11 @@ def parse_arguments():
     parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')", choices=["BLACK", "WHITE"])
     parser.add_argument("-p", "--port", help="Server connection port (defaults to 5800 for WHITE and 5801 for BLACK)", type=int)
     parser.add_argument("-i", "--ip", help="Server IP address (defaults to localhost)", default="localhost")
-    parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally", action="store_true")
+    parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally",
+                        action="store_true")
+    parser.add_argument("-d", "--depth",
+                        help="Minmax tree maximum depth (default is 3, value <= 0 to ignore depth cutoff)", default=3,
+                        type=int)
     parser.add_argument("--skip-connection",
                         help="[DEPRECATED, USE --local] If provided, ignore failed connection to server",
                         action="store_true")
@@ -28,17 +32,24 @@ def parse_arguments():
     role = args.role
     ip = args.ip
     skip_conn = args.local or args.skip_connection
+    depth = args.depth
 
     port = args.port
     if not port:
         port = get_player_port(role)
 
-    return role, ip, port, skip_conn
+    return role, ip, port, skip_conn, depth
 
 def main():
     ic("Tablut client")
 
-    role, ip, port, skip_conn = parse_arguments()
+    role, ip, port, skip_conn, depth = parse_arguments()
+
+    print(f"Role: {role}")
+    print(f"IP address: {ip}")
+    print(f"TCP port: {port}")
+    print(f"Minmax depth: {depth}")
+    print(f"Run locally? {skip_conn}")
 
     b = Board()
     b.print_grid()
@@ -92,7 +103,7 @@ def main():
 
         for i in range(6):
             # Alternate black and white
-            turn = player.role if (i%2) == 0 else player.opponent
+            turn = player.role if (i % 2) == 0 else player.opponent
 
             print(f"--------{turn}--------")
             tablut.board = b
@@ -101,7 +112,10 @@ def main():
 
             print("Searching move...")
             before = time()
-            move = alpha_beta_cutoff_search(culo, tablut, 2)
+            if depth <= 0:
+                move = alpha_beta_search(culo, tablut)
+            else:
+                move = alpha_beta_cutoff_search(culo, tablut, depth)
             after = time()
             _from, _to = move[0], move[1]
             b = b.apply_move(_from, _to, turn)
