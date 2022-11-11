@@ -88,21 +88,57 @@ def main():
 
         print("______________________________________")
         culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
-        move = alpha_beta_cutoff_search(culo, tablut, 3)
+        move = alpha_beta_cutoff_search(culo, tablut, 1)
         print(move)
         _from, _to = move[0], move[1]
         b.print_grid()
+        moves_A = tablut.actions(b)
+        blacks_A = b.blacks
         b = b.apply_move(_from, _to, player.role)
+        tablut.player.board = b
         b.print_grid()
 
         print("______________________________________")
         culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
-        move = alpha_beta_cutoff_search(culo, tablut, 3)
+        move = alpha_beta_cutoff_search(culo, tablut, 1)
         print(move)
         _from, _to = move[0], move[1]
         b.print_grid()
+
+        moves_B = tablut.actions(b)
+        blacks_B = b.blacks
         b = b.apply_move(_from, _to, player.role)
+        tablut.player.board = b
         b.print_grid()
+
+        print("______________________________________")
+        culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
+        move = alpha_beta_cutoff_search(culo, tablut, 1)
+        print(move)
+        _from, _to = move[0], move[1]
+        b.print_grid()
+
+        moves_B = tablut.actions(b)
+        blacks_B = b.blacks
+        b = b.apply_move(_from, _to, player.role)
+        tablut.player.board = b
+        b.print_grid()
+
+        print("______________________________________")
+        culo = GameState(to_move=player.role, utility=tablut.utility(b, player.role), board=b, moves=tablut.actions(b))
+        move = alpha_beta_cutoff_search(culo, tablut, 1)
+        print(move)
+        _from, _to = move[0], move[1]
+        b.print_grid()
+
+        moves_B = tablut.actions(b)
+        blacks_B = b.blacks
+        b = b.apply_move(_from, _to, player.role)
+        tablut.player.board = b
+        b.print_grid()
+
+        print(blacks_A)
+        print(blacks_B)
     return 0
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ class Tablut(ag.Game):
         self.board = player.board
         self.initial=ag.GameState(to_move=player.role,utility=self.utility(self.board, player.role),board=player.board.grid,moves=self.actions(player.board))
 
-    def actions(self, state):
+    def actions(self, state): #il problema è qui, per qualche ragione questa funzione restituisce sempre la stessa lista di mosse possibili
         """Return a list of the allowable moves at this point."""
         moves = list()
         if self.player.role == "WHITE":
@@ -35,7 +35,7 @@ class Tablut(ag.Game):
         move_from=move[0]
         move_to=move[1]
         #print(move, "|", move_from, "|", move_to)
-        board_result=self.board.apply_move((move_from),move_to,self.initial.to_move)
+        board_result=self.board.apply_move(move_from,move_to,self.initial.to_move)
         return board_result.to_string_grid()
     
     
