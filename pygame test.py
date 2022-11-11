@@ -1,11 +1,10 @@
 import sys
-import pygame as pg
-import pygame.math as pgmath
-import pygame.draw as pgdraw
-import pygame.mouse as pgmouse
-from icecream import ic
 
-from board import Board, CellType
+import pygame as pg
+import pygame.draw as pgdraw
+import pygame.math as pgmath
+
+from board import Board, CellType, CheckerType
 
 SCREEN_SIZE = pgmath.Vector2(540,540)
 grid_size = pgmath.Vector2(9,9)
@@ -16,7 +15,7 @@ b = Board()
 
 def on_event(event):
     # exit program when quit event is sent
-    if event.type == pg.QUIT:
+    if event.type == pg.QUIT or (event.type == pg.KEYUP and event.key == pg.K_ESCAPE):
         sys.exit(0)
 
 def draw(screen):
@@ -29,30 +28,36 @@ def draw(screen):
                          cell_side.x,
                          cell_side.y)
 
-            col = "#d8eb34"
-            if b.grid[r,c].type == CellType.ESCAPE:
+            col = "#ddeb5e"
+            if b.grid[r, c].type == CellType.ESCAPE:
                 col = "#8c4408"
-            if b.grid[r,c].type == CellType.CASTLE:
-                col = "#EE0000"
-            if b.grid[r,c].type == CellType.CAMP:
+            if b.grid[r, c].type == CellType.CASTLE:
+                col = "#ac000e"
+            if b.grid[r, c].type == CellType.CAMP:
                 col = "#101010"
-            pgdraw.rect(screen, color=col,rect=rect)
+            pgdraw.rect(screen, color=col, rect=rect)
 
-            pgdraw.rect(screen, color="#EEEEEE",width=1,rect=rect)
+            if b.grid[r, c].checker != CheckerType.EMPTY:
+                match b.grid[r, c].checker:
+                    case CheckerType.BLACK:
+                        inner_col = "black"
+                        outer_col = "white"
+                    case CheckerType.KING:
+                        inner_col = "red"
+                        outer_col = "black"
+                    case _:
+                        inner_col = "white"
+                        outer_col = "black"
 
-    mouse_pos = list(pgmouse.get_pos())
+                radius = 20
+                stroke_w = 2
 
-    def round_to_multiple(n,m):
-        return m*round(n/m)
+                pgdraw.circle(screen, color=outer_col, center=(rect.x + cell_side.x / 2, rect.y + cell_side.y / 2),
+                              radius=radius + stroke_w)
+                pgdraw.circle(screen, color=inner_col, center=(rect.x + cell_side.x / 2, rect.y + cell_side.y / 2),
+                              radius=radius)
 
-    mouse_pos[0] = (round_to_multiple(mouse_pos[0], cell_side.x/2))
-    mouse_pos[1] = (round_to_multiple(mouse_pos[1], cell_side.y/2))
-    ic(mouse_pos)
-
-    pgdraw.circle(screen,
-                  color="white",
-                  center=mouse_pos,
-                  radius=20)
+            # pgdraw.rect(screen, color="#cdcdcd",width=1,rect=rect)
 
     pg.display.flip()
 
