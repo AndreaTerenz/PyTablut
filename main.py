@@ -8,6 +8,7 @@ from Tablut import Tablut
 from aima.games import GameState, alpha_beta_cutoff_search, alpha_beta_search
 from board import Board
 from connect import Connection, get_player_port
+from gui import GUI
 from player import RandomPlayer
 
 CLIENT_NAME = "StreetKing"
@@ -52,7 +53,9 @@ def main():
     print(f"Run locally? {skip_conn}")
 
     b = Board()
+    ui = GUI(b)
     b.print_grid()
+    ui.draw()
 
     player = RandomPlayer(role, b)
     tablut = Tablut(player)
@@ -101,7 +104,7 @@ def main():
     else:
         ic("Connection to server skipped")
 
-        for i in range(6):
+        for i in range(8):
             # Alternate black and white
             turn = player.role if (i % 2) == 0 else player.opponent
 
@@ -122,6 +125,8 @@ def main():
 
             print(f"Suggested move: {move} ({after - before} s)")
             b.print_grid()
+            ui.board = b
+            ui.draw()
 
     return 0
 
