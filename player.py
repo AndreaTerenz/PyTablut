@@ -49,6 +49,7 @@ class BasePlayer(ABC):
         :param start_c: starting column
         :return: True if the move is valid
         """
+        checker_to_move = self.board.grid[start_r, start_c].checker
         dest_cell_checker = self.board.grid[destination_r, destination_c].checker
 
         # Innanzitutto, la cella di destinazione deve essere vuota
@@ -57,11 +58,11 @@ class BasePlayer(ABC):
 
         dest_cell_type = self.board.grid[destination_r, destination_c].type
 
-        if self.role == "WHITE":
+        if checker_to_move == CheckerType.WHITE:
             # Deve essere VUOTA
             # Puo' essere una cella NORMAL o una ESCAPE
             return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]
-        elif self.role == "BLACK":
+        elif checker_to_move == CheckerType.BLACK:
             if self.board.grid[start_r, start_c].type == CellType.CAMP:
                 # Deve essere VUOTA
                 # Non puo' essere il CASTLE

@@ -6,21 +6,20 @@ from board import CheckerType, CellType
 
 class Tablut(ag.Game):
     def __init__(self,player):
-        self.player = player
         self.board = player.board
         self.role = player.role
         self.opponent = player.opponent
 
         self.initial=ag.GameState(to_move=self.role,utility=self.utility(self.board, self.role),board=self.board.grid,moves=self.actions(self.board))
 
-    def actions(self, state): #il problema è qui, per qualche ragione questa funzione restituisce sempre la stessa lista di mosse possibili
+    def actions(self, state):  # il problema e' qui, e' sempre qui
         """Return a list of the allowable moves at this point."""
         moves = []
-        checkers = self.board.whites + [self.board.king] if self.role == "WHITE" else self.board.blacks
+        checkers = self.board.get_checkers_for_role(self.role)
 
         for checker in checkers:
             r, c = checker
-            checker_moves = self.player.moves_for_cell(r, c)
+            checker_moves = self.board.moves_for_cell(r, c)
             to_append = [[(r, c), move] for move in checker_moves]
             moves += to_append
 

@@ -5,7 +5,7 @@ from time import time
 from icecream import ic
 
 from Tablut import Tablut
-from aima.games import GameState, alpha_beta_cutoff_search, alpha_beta_search
+from aima.games import GameState, alpha_beta_cutoff_search
 from board import Board, CheckerType
 from connect import Connection, get_player_port
 from gui import GUI
@@ -40,6 +40,41 @@ def parse_arguments():
         port = get_player_port(role)
 
     return role, ip, port, skip_conn, depth
+
+
+def run_tests(old_board, new_board, moves, _from, _to, turn):
+    # Check that the new board is actually different
+    all_equal = True
+    for i in range(9):
+        for j in range(9):
+            if old_board.grid[i, j] != new_board.grid[i, j]:
+                all_equal = False
+                break
+        if not all_equal:
+            break
+
+    assert not all_equal, "WHY THE fuck ARE THE TWO BOARDS IDENTICAL??"
+
+    # check that list of checkers for the current turn has been updated
+    old_checkers = old_board.get_checkers_for_role(turn)
+    new_checkers = new_board.get_checkers_for_role(turn)
+    all_equal = (set(old_checkers) == set(new_checkers))
+    assert not all_equal, "WHY THE fuck ARE THE CHECKERS LISTS IDENTICAL??"
+
+    for move in moves:
+        # every element in culo.moves is a [from, to] move,
+        # where "from" and "to" are two tuples
+        f, t = move
+        # check that every move in culo.moves is actually possible
+        assert old_board.grid[t].checker == CheckerType.EMPTY, \
+            f"ILLEGAL POSSIBLE MOVE: {f} -> {t}"
+
+    expected_checker = [CheckerType.WHITE, CheckerType.KING] if turn == "WHITE" else [CheckerType.BLACK]
+    assert old_board.grid[_from].checker in expected_checker, \
+        f"ILLEGAL STARTING POSITION: {_from} ({old_board.grid[_from].checker})"
+    assert old_board.grid[_to].checker == CheckerType.EMPTY, \
+        f"ILLEGAL FINAL POSITION: {_to} ({old_board.grid[_to].checker})"
+
 
 def main():
     ic("Tablut client")
@@ -104,7 +139,11 @@ def main():
     else:
         ic("Connection to server skipped")
 
-        for i in range(8):
+        for i in range(12):
+            if b.king == (100, 100):
+                print("GAME OVER")
+                break
+
             # Alternate black and white
             turn = player.role if (i % 2) == 0 else player.opponent
 
@@ -118,47 +157,19 @@ def main():
 
             print("Searching move...")
             before = time()
-            if depth <= 0:
-                move = alpha_beta_search(culo, tablut)
-            else:
-                move = alpha_beta_cutoff_search(culo, tablut, depth)
+            move = alpha_beta_cutoff_search(culo, tablut, depth)
             after = time()
             _from, _to = move[0], move[1]
 
             new_board = b.apply_move(_from, _to, turn)
 
-            ## Various sanity checks
+            ## Run some sanity checks
             try:
-
-                all_equal = True
-                for i in range(9):
-                    for j in range(9):
-                        if b.grid[i, j] != new_board.grid[i, j]:
-                            all_equal = False
-                            break
-                    if not all_equal:
-                        break
-
-                assert not all_equal, "WHY THE HECK ARE THE TWO BOARDS IDENTICAL??"
-
-                for move in culo.moves:
-                    # every element in culo.moves is a [from, to] move,
-                    # where "from" and "to" are two tuples
-                    f, t = move
-                    # check that every move in culo.moves is actually possible
-                    assert b.grid[t].checker == CheckerType.EMPTY, \
-                        f"ILLEGAL MOVE IN LIST OF POSSIBLE MOVES: {f} -> {t}"
-
-                expected_checker = [CheckerType.WHITE, CheckerType.KING] if turn == "WHITE" else [CheckerType.BLACK]
-                assert b.grid[_from].checker in expected_checker, \
-                    f"ILLEGAL STARTING POSITION: {_from} ({b.grid[_from].checker})"
-                assert b.grid[_to].checker == CheckerType.EMPTY, \
-                    f"ILLEGAL FINAL POSITION: {_to} ({b.grid[_to].checker})"
+                run_tests(b, new_board, culo.moves, _from, _to, turn)
             except AssertionError as e:
-                print("CRITICAL ERROR")
+                print("[CRITICAL ERROR]")
                 print(e)
                 return -1
-            ##
 
             b = new_board
 

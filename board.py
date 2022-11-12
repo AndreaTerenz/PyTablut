@@ -360,6 +360,99 @@ class Board:
 
         for i in range(9):
             for j in range(9):
-                output[i][j] = str(self.grid[i,j].checker)
+                output[i][j] = str(self.grid[i, j].checker)
 
         return output
+
+    def get_checkers_for_role(self, role: str, include_king=True) -> list:
+        """
+        Return checkers that can belong to the player of the given role
+
+        :param role: player role (either "WHITE" or "BLACK")
+        :param include_king: if False, don't count the king as a white checker
+        :return: list of checkers or empty list if role is invalid
+        """
+        match (role):
+            case "WHITE":
+                return self.whites + ([self.king] if include_king else [])
+            case "BLACK":
+                return self.blacks
+            case _:
+                return []
+
+    def check_move(self, destination_r, destination_c, start_r, start_c) -> bool:
+        """
+        Check if moving a checker from (cell_r,cell_c) to (move_r.move_c) is a valid move
+
+        :param destination_r: destination row
+        :param destination_c: destination column
+        :param start_r: starting row
+        :param start_c: starting column
+        :return: True if the move is valid
+        """
+        checker_to_move = self.grid[start_r, start_c].checker
+        dest_cell_checker = self.grid[destination_r, destination_c].checker
+
+        # Innanzitutto, la cella di destinazione deve essere vuota
+        if dest_cell_checker != CheckerType.EMPTY:
+            return False
+
+        dest_cell_type = self.grid[destination_r, destination_c].type
+
+        if checker_to_move == CheckerType.WHITE:
+            # Deve essere VUOTA
+            # Puo' essere una cella NORMAL o una ESCAPE
+            return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]
+        elif checker_to_move == CheckerType.BLACK:
+            if self.grid[start_r, start_c].type == CellType.CAMP:
+                # Deve essere VUOTA
+                # Non puo' essere il CASTLE
+                return dest_cell_type != CellType.CASTLE
+            else:
+                # Deve essere VUOTA
+                # Puo' essere una cella NORMAL o una ESCAPE
+                return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]
+
+    def moves_for_cell(self, r, c):
+        """
+        Compute list of all possible legal moves for a checker in (r,c)
+
+        :param r: checker row
+        :param c: checker column
+        :return: List of legal moves
+        """
+        moves = []
+
+        """
+        moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c-1,-1,-1))]
+        moves += [(r,j) for j in takewhile(lambda j: self.check_move(r, j, r, c), range(c + 1, 9))]
+        moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r - 1, -1, -1))]
+        moves += [(i,c) for i in takewhile(lambda i: self.check_move(i,c,r,c), range(r + 1, 9))]
+        """
+
+        # Explore left
+        for j in range(c - 1, -1, -1):
+            if self.check_move(r, j, r, c):
+                moves.append((r, j))
+            else:
+                break
+        # Explore right
+        for j in range(c + 1, 9):
+            if self.check_move(r, j, r, c):
+                moves.append((r, j))
+            else:
+                break
+        # Explore up
+        for i in range(r - 1, -1, -1):
+            if self.check_move(i, c, r, c):
+                moves.append((i, c))
+            else:
+                break
+        # Explore down
+        for i in range(r + 1, 9):
+            if self.check_move(i, c, r, c):
+                moves.append((i, c))
+            else:
+                break
+
+        return moves
