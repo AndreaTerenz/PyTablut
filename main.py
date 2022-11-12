@@ -6,7 +6,7 @@ from icecream import ic
 
 from Tablut import Tablut
 from aima.games import GameState, alpha_beta_cutoff_search, alpha_beta_search
-from board import Board
+from board import Board, CheckerType
 from connect import Connection, get_player_port
 from gui import GUI
 from player import RandomPlayer
@@ -113,6 +113,9 @@ def main():
             tablut.role = turn
             culo = GameState(to_move=turn, utility=tablut.utility(b, turn), board=b, moves=tablut.actions(b))
 
+            print("Initial board:")
+            b.print_grid()
+
             print("Searching move...")
             before = time()
             if depth <= 0:
@@ -121,9 +124,48 @@ def main():
                 move = alpha_beta_cutoff_search(culo, tablut, depth)
             after = time()
             _from, _to = move[0], move[1]
-            b = b.apply_move(_from, _to, turn)
 
-            print(f"Suggested move: {move} ({after - before} s)")
+            new_board = b.apply_move(_from, _to, turn)
+
+            ## Various sanity checks
+            try:
+
+                all_equal = True
+                for i in range(9):
+                    for j in range(9):
+                        if b.grid[i, j] != new_board.grid[i, j]:
+                            all_equal = False
+                            break
+                    if not all_equal:
+                        break
+
+                assert not all_equal, "WHY THE HECK ARE THE TWO BOARDS IDENTICAL??"
+
+                for move in culo.moves:
+                    # every element in culo.moves is a [from, to] move,
+                    # where "from" and "to" are two tuples
+                    f, t = move
+                    # check that every move in culo.moves is actually possible
+                    assert b.grid[t].checker == CheckerType.EMPTY, \
+                        f"ILLEGAL MOVE IN LIST OF POSSIBLE MOVES: {f} -> {t}"
+
+                expected_checker = [CheckerType.WHITE, CheckerType.KING] if turn == "WHITE" else [CheckerType.BLACK]
+                assert b.grid[_from].checker in expected_checker, \
+                    f"ILLEGAL STARTING POSITION: {_from} ({b.grid[_from].checker})"
+                assert b.grid[_to].checker == CheckerType.EMPTY, \
+                    f"ILLEGAL FINAL POSITION: {_to} ({b.grid[_to].checker})"
+            except AssertionError as e:
+                print("CRITICAL ERROR")
+                print(e)
+                return -1
+            ##
+
+            b = new_board
+
+            print(f"Move found: {move[0]} -> {move[1]}")
+            print(f"Search took {(after - before):.3f} s")
+
+            print("Resulting board:")
             b.print_grid()
             ui.draw(b)
 
