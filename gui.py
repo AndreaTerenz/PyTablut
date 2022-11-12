@@ -8,44 +8,49 @@ from board import Board, CellType, CheckerType
 
 
 class GUI:
-    SCREEN_SIZE = pgmath.Vector2(540, 540)
-    grid_size = pgmath.Vector2(9, 9)
-    cell_side = pgmath.Vector2(SCREEN_SIZE.x / grid_size.x,
-                               SCREEN_SIZE.y / grid_size.y)
+    SCREEN_SIZE = pgmath.Vector2(7) * 9 * 10
+    GRID_SIZE = pgmath.Vector2(9)
+    CELL_SIZE = pgmath.Vector2(SCREEN_SIZE.x / GRID_SIZE.x,
+                               SCREEN_SIZE.y / GRID_SIZE.y)
 
-    def __init__(self, b: Board):
-        self.board = b
-
+    def __init__(self):
         pg.init()
         self.screen = pg.display.set_mode(GUI.SCREEN_SIZE)
-        pg.display.set_caption("PyTablut")
+        pg.display.set_caption("StreetKing")
 
     def on_event(self, event):
         # exit program when quit event is sent
-        if event.type == pg.QUIT or (event.type == pg.KEYUP and event.key == pg.K_ESCAPE):
+        if event.type == pg.QUIT or GUI.check_key(event, pg.K_ESCAPE):
             sys.exit(0)
 
-    def draw(self):
+    @staticmethod
+    def check_key(event, key, state=pg.KEYUP):
+        return event.type == state and event.key == key
+
+    def draw(self, board):
         self.screen.fill(color="black")
 
         for r in range(9):
             for c in range(9):
-                rect = pg.Rect(c * GUI.cell_side.x,
-                               r * GUI.cell_side.y,
-                               GUI.cell_side.x,
-                               GUI.cell_side.y)
+                rect = pg.Rect(c * GUI.CELL_SIZE.x,
+                               r * GUI.CELL_SIZE.y,
+                               GUI.CELL_SIZE.x,
+                               GUI.CELL_SIZE.y)
 
-                col = "#ddeb5e"
-                if self.board.grid[r, c].type == CellType.ESCAPE:
-                    col = "#8c4408"
-                if self.board.grid[r, c].type == CellType.CASTLE:
-                    col = "#ac000e"
-                if self.board.grid[r, c].type == CellType.CAMP:
-                    col = "#101010"
+                match board.grid[r, c].type:
+                    case CellType.ESCAPE:
+                        col = "#8c4408"
+                    case CellType.CASTLE:
+                        col = "#ac000e"
+                    case CellType.CAMP:
+                        col = "#101010"
+                    case _:
+                        col = "#ddeb5e"
+
                 pgdraw.rect(self.screen, color=col, rect=rect)
 
-                if self.board.grid[r, c].checker != CheckerType.EMPTY:
-                    match self.board.grid[r, c].checker:
+                if board.grid[r, c].checker != CheckerType.EMPTY:
+                    match board.grid[r, c].checker:
                         case CheckerType.BLACK:
                             inner_col = "black"
                             outer_col = "white"
@@ -56,21 +61,19 @@ class GUI:
                             inner_col = "white"
                             outer_col = "black"
 
-                    radius = 20
-                    stroke_w = 2
+                    radius = 0.6 * GUI.CELL_SIZE.x / 2
+                    stroke_ratio = 0.1
 
                     pgdraw.circle(self.screen, color=outer_col,
-                                  center=(rect.x + GUI.cell_side.x / 2, rect.y + GUI.cell_side.y / 2),
-                                  radius=radius + stroke_w)
+                                  center=(rect.x + GUI.CELL_SIZE.x / 2, rect.y + GUI.CELL_SIZE.y / 2),
+                                  radius=radius * (1 + stroke_ratio))
                     pgdraw.circle(self.screen, color=inner_col,
-                                  center=(rect.x + GUI.cell_side.x / 2, rect.y + GUI.cell_side.y / 2),
+                                  center=(rect.x + GUI.CELL_SIZE.x / 2, rect.y + GUI.CELL_SIZE.y / 2),
                                   radius=radius)
-
-                # pgdraw.rect(screen, color="#cdcdcd",width=1,rect=rect)
 
         pg.display.flip()
 
-    def run(self, events=False):
+    def run(self, board, events=False):
         # main loop
         while True:
             # event handling, gets all event from the event queue
@@ -78,9 +81,9 @@ class GUI:
                 for event in pg.event.get():
                     self.on_event(event)
 
-            self.draw()
+            self.draw(board)
 
 
 if __name__ == "__main__":
-    gui = GUI(Board())
-    gui.run()
+    gui = GUI()
+    gui.run(Board())

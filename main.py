@@ -53,9 +53,9 @@ def main():
     print(f"Run locally? {skip_conn}")
 
     b = Board()
-    ui = GUI(b)
+    ui = GUI()
     b.print_grid()
-    ui.draw()
+    ui.draw(b)
 
     player = RandomPlayer(role, b)
     tablut = Tablut(player)
@@ -125,8 +125,7 @@ def main():
 
             print(f"Suggested move: {move} ({after - before} s)")
             b.print_grid()
-            ui.board = b
-            ui.draw()
+            ui.draw(b)
 
     return 0
 
