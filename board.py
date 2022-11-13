@@ -207,47 +207,59 @@ class Board:
 
         # caso del re
         row_k, column_k = output.king
-        king_neighbors = list()
-        king_neighbors.append([output.grid[row_k,column_k - 1], output.grid[row_k - 1,column_k],
-                               output.grid[row_k,column_k + 1], output.grid[row_k + 1,column_k]])
+        # can't check outside the board
+        if output.king != (100, 100):
+            pass
+            """
+            king_neighbors = [output.grid[row_k,column_k - 1], output.grid[row_k - 1,column_k],
+                              output.grid[row_k,column_k + 1], output.grid[row_k + 1,column_k]]
 
-        blacks = king_neighbors.count(Cell(CellType.NORMAL, CheckerType.BLACK))
-        castles = king_neighbors.count(Cell(CellType.CASTLE, CheckerType.EMPTY))
+            blacks = king_neighbors.count(Cell(CellType.NORMAL, CheckerType.BLACK))
+            castles = king_neighbors.count(Cell(CellType.CASTLE, CheckerType.EMPTY))
 
-        if blacks == 4:
-            output.king = (100,100)
-        elif blacks == 3 and castles == 1:
-            output.king = (100,100)
+            if blacks == 4:
+                output.king = (100,100)
+            elif blacks == 3 and castles == 1:
+                output.king = (100,100)
+            """
 
         if column > 1:
             if output.grid[row, column - 1].checker == opponent:
                 if output.grid[row, column - 2].checker == role or output.grid[row, column - 2].type in [CellType.CAMP, CellType.CASTLE]:
                     eaten_checkers.append((row, column - 1))
             if role == CheckerType.BLACK and output.grid[row, column - 1].checker == CheckerType.KING:
-                if output.grid[row, column - 2].checker == role or output.grid[row, column - 2].type in [CellType.CAMP, CellType.CASTLE]:
-                    self.king = (100,100)
+                if output.grid[row, column - 2].checker == role or output.grid[row, column - 2].type in [CellType.CAMP,
+                                                                                                         CellType.CASTLE]:
+                    pass
+                    # self.king = (100,100)
 
 
         if column < 7 and output.grid[row, column + 1].checker == opponent:
             if output.grid[row, column + 2].checker == role or output.grid[row, column + 2].type in [CellType.CAMP, CellType.CASTLE]:
                 eaten_checkers.append((row, column + 1))
             if role == CheckerType.BLACK and output.grid[row, column - 1].checker == CheckerType.KING:
-                if output.grid[row, column + 2].checker == role or output.grid[row, column + 2].type in [CellType.CAMP,CellType.CASTLE]:
-                    self.king = (100, 100)
+                if output.grid[row, column + 2].checker == role or output.grid[row, column + 2].type in [CellType.CAMP,
+                                                                                                         CellType.CASTLE]:
+                    pass
+                    #self.king = (100, 100)
 
         if row > 1 and output.grid[row - 1, column].checker == opponent:
             if output.grid[row - 2, column].checker == role or output.grid[row - 2, column].type in [CellType.CAMP, CellType.CASTLE]:
                 eaten_checkers.append((row - 1, column))
             if role == CheckerType.BLACK and output.grid[row - 1, column].checker == CheckerType.KING:
-                if output.grid[row - 2, column].checker == role or output.grid[row - 2, column].type in [CellType.CAMP,CellType.CASTLE]:
-                    self.king = (100, 100)
+                if output.grid[row - 2, column].checker == role or output.grid[row - 2, column].type in [CellType.CAMP,
+                                                                                                         CellType.CASTLE]:
+                    pass
+                    #self.king = (100, 100)
 
         if row < 7 and output.grid[row + 1, column].checker == opponent:
             if output.grid[row + 2, column].checker == role or output.grid[row + 2, column].type in [CellType.CAMP, CellType.CASTLE]:
                 eaten_checkers.append((row + 1, column))
             if role == CheckerType.BLACK and output.grid[row + 1, column].checker == CheckerType.KING:
-                if output.grid[row + 2, column].checker == role or output.grid[row + 2, column].type in [CellType.CAMP,CellType.CASTLE]:
-                    self.king = (100, 100)
+                if output.grid[row + 2, column].checker == role or output.grid[row + 2, column].type in [CellType.CAMP,
+                                                                                                         CellType.CASTLE]:
+                    pass
+                    #self.king = (100, 100)
 
         if len(eaten_checkers) > 0:
             ic(f"Eaten checkers: {eaten_checkers}")
@@ -298,6 +310,9 @@ class Board:
 
         :return: True if the game is over
         """
+        if self.king == (100, 100):
+            return True
+
         # King in an escape tile?
         if self.grid[self.king].type == CellType.ESCAPE:
             return True

@@ -1,16 +1,17 @@
 import numpy as np
 
 import aima.games as ag
-from board import CheckerType, CellType
+from board import CheckerType, CellType, Board
 
 
 class Tablut(ag.Game):
-    def __init__(self,player):
-        self.board = player.board
-        self.role = player.role
-        self.opponent = player.opponent
+    def __init__(self, role):
+        self.board = Board()
+        self.role = role
+        self.opponent = "BLACK" if role == "WHITE" else "WHITE"
 
-        self.initial=ag.GameState(to_move=self.role,utility=self.utility(self.board, self.role),board=self.board.grid,moves=self.actions(self.board))
+        self.initial = ag.GameState(to_move=self.role, utility=self.utility(self.board, self.role),
+                                    board=self.board.grid, moves=self.actions(self.board))
 
     def actions(self, state):  # il problema e' qui, e' sempre qui
         """Return a list of the allowable moves at this point."""
@@ -27,13 +28,11 @@ class Tablut(ag.Game):
 
     def result(self, state, move):
         """Return the state that results from making a move from a state."""
-        move_from=move[0]
-        move_to=move[1]
-        #print(move, "|", move_from, "|", move_to)
-        board_result=self.board.apply_move(move_from,move_to,self.initial.to_move)
+        move_from = move[0]
+        move_to = move[1]
+
+        board_result = self.board.apply_move(move_from, move_to, self.role)
         return board_result.to_string_grid()
-    
-    
     
     def __king_in_danger(self,state):
 
@@ -100,7 +99,7 @@ class Tablut(ag.Game):
 
     def to_move(self, state):
         """Return the player whose move it is in this state."""
-        return self.initial.to_move
+        return state.to_move
 
 
     def display(self, state):

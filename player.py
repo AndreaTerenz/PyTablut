@@ -39,6 +39,7 @@ class BasePlayer(ABC):
 
         return move
 
+    # FIXME: Remove, method was moved to Board class
     def check_move(self, destination_r, destination_c, start_r, start_c) -> bool:
         """
         Check if moving a checker from (cell_r,cell_c) to (move_r.move_c) is a valid move
@@ -90,6 +91,7 @@ class BasePlayer(ABC):
         """
         pass
 
+    #FIXME: Remove, method was moved to Board class
     def moves_for_cell(self, r, c):
         """
         Compute list of all possible legal moves for a checker in (r,c)

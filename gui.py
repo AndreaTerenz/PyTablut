@@ -13,10 +13,10 @@ class GUI:
     CELL_SIZE = pgmath.Vector2(SCREEN_SIZE.x / GRID_SIZE.x,
                                SCREEN_SIZE.y / GRID_SIZE.y)
 
-    def __init__(self):
+    def __init__(self, title=""):
         pg.init()
         self.screen = pg.display.set_mode(GUI.SCREEN_SIZE)
-        pg.display.set_caption("StreetKing")
+        pg.display.set_caption(title)
 
     def on_event(self, event):
         # exit program when quit event is sent

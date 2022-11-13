@@ -2,22 +2,21 @@ import sys
 from argparse import ArgumentParser
 from time import time
 
-from icecream import ic
-
 from Tablut import Tablut
 from aima.games import GameState, alpha_beta_cutoff_search
-from board import Board, CheckerType
-from connect import Connection, get_player_port
+from board import CheckerType
+from connect import get_player_port
 from gui import GUI
-from player import RandomPlayer
 
 CLIENT_NAME = "StreetKing"
+
 
 def parse_arguments():
     parser = ArgumentParser()
 
     parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')", choices=["BLACK", "WHITE"])
-    parser.add_argument("-p", "--port", help="Server connection port (defaults to 5800 for WHITE and 5801 for BLACK)", type=int)
+    parser.add_argument("-p", "--port", help="Server connection port (defaults to 5800 for WHITE and 5801 for BLACK)",
+                        type=int)
     parser.add_argument("-i", "--ip", help="Server IP address (defaults to localhost)", default="localhost")
     parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally",
                         action="store_true")
@@ -77,41 +76,30 @@ def run_tests(old_board, new_board, moves, _from, _to, turn):
 
 
 def main():
-    ic("Tablut client")
+    print(CLIENT_NAME)
 
     role, ip, port, skip_conn, depth = parse_arguments()
+    opponent = "BLACK" if role == "WHITE" else "WHITE"
 
     print(f"Role: {role}")
-    print(f"IP address: {ip}")
-    print(f"TCP port: {port}")
     print(f"Minmax depth: {depth}")
     print(f"Run locally? {skip_conn}")
 
-    b = Board()
-    ui = GUI()
-    b.print_grid()
-    ui.draw(b)
-
-    player = RandomPlayer(role, b)
-    tablut = Tablut(player)
-
-    conn = Connection(CLIENT_NAME, role, server_ip=ip, server_port=port)
+    print("#####################################")
 
     if not skip_conn:
+        print(f"IP address: {ip}")
+        print(f"TCP port: {port}")
+        """
+        conn = Connection(CLIENT_NAME, role, server_ip=ip, server_port=port)
+        b = Board()
+        player = RandomPlayer(role, b)
         try:
             conn.connect_to_server()
         except:
             return -1
 
-        """
-        Game loop:
-
-        while [game not over]:
-            1) get player move M
-            2) send move to server
-            3) receive opponent move M'
-            4) update board with M'
-        """
+        
         if role == "BLACK":
             new_state = conn.receive_new_state()
             b.update_state(new_state)
@@ -136,24 +124,33 @@ def main():
         ic("Game done!")
         conn.close()
         return 0
+        """
     else:
-        ic("Connection to server skipped")
+        ui = GUI(title=CLIENT_NAME)
+        tablut = Tablut(role)
+        tablut.board.print_grid()
+        ui.draw(tablut.board)
 
-        for i in range(12):
-            if b.king == (100, 100):
-                print("GAME OVER")
+        print("#####################################")
+
+        i = 0
+        for i in range(20):
+            kr, kc = tablut.board.king
+            if kr == 100 or kc == 100:
                 break
 
             # Alternate black and white
-            turn = player.role if (i % 2) == 0 else player.opponent
+            turn = role if (i % 2) == 0 else opponent
 
             print(f"--------{turn}--------")
-            tablut.board = b
             tablut.role = turn
-            culo = GameState(to_move=turn, utility=tablut.utility(b, turn), board=b, moves=tablut.actions(b))
+            culo = GameState(to_move=turn,
+                             utility=tablut.utility(tablut.board, turn),
+                             board=tablut.board,
+                             moves=tablut.actions(tablut.board))
 
             print("Initial board:")
-            b.print_grid()
+            tablut.board.print_grid()
 
             print("Searching move...")
             before = time()
@@ -161,24 +158,28 @@ def main():
             after = time()
             _from, _to = move[0], move[1]
 
-            new_board = b.apply_move(_from, _to, turn)
+            new_board = tablut.board.apply_move(_from, _to, turn)
 
             ## Run some sanity checks
             try:
-                run_tests(b, new_board, culo.moves, _from, _to, turn)
+                run_tests(tablut.board, new_board, culo.moves, _from, _to, turn)
             except AssertionError as e:
                 print("[CRITICAL ERROR]")
                 print(e)
                 return -1
 
-            b = new_board
+            tablut.board = new_board
 
-            print(f"Move found: {move[0]} -> {move[1]}")
-            print(f"Search took {(after - before):.3f} s")
+            print(f"Move: {move[0]} -> {move[1]}")
+            print(f"Found in: {(after - before):.3f} s")
 
             print("Resulting board:")
-            b.print_grid()
-            ui.draw(b)
+            tablut.board.print_grid()
+            ui.draw(tablut.board)
+
+        print("#####################################")
+        print(f"GAME OVER ({i + 1} turns)")
+        tablut.board.print_grid()
 
     return 0
 
