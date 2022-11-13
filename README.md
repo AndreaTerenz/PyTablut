@@ -29,18 +29,24 @@ client!
 The client can be run using the following arguments:
 
 ```
-usage: main.py [-h] [-p PORT] [-i IP] [--skip-connection] role
+usage: main.py [-h] [-p PORT] [-i IP] [-l] [-d DEPTH] [--skip-connection]
+               {BLACK,WHITE}
 
 positional arguments:
-  role                  Player role (either 'BLACK' or 'WHITE')
+  {BLACK,WHITE}         Player role (either 'BLACK' or 'WHITE')
 
 options:
   -h, --help            show this help message and exit
   -p PORT, --port PORT  Server connection port (defaults to 5800 for WHITE and
                         5801 for BLACK)
   -i IP, --ip IP        Server IP address (defaults to localhost)
-  --skip-connection     If provided, ignore failed connection to server
-                        (useful in debug/development)
+  -l, --local           Do not connect to server and run player against itself
+                        locally
+  -d DEPTH, --depth DEPTH
+                        Minmax tree maximum depth (default is 3, value <= 0 to
+                        ignore depth cutoff)
+  --skip-connection     [DEPRECATED, USE --local] If provided, ignore failed
+                        connection to server
 ```
 
 Usually, the only two required arguments are the player role (always required) and the server IP address (could run on
