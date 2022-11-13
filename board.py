@@ -209,8 +209,6 @@ class Board:
         row_k, column_k = output.king
         # can't check outside the board
         if output.king != (100, 100):
-            pass
-            """
             king_neighbors = [output.grid[row_k,column_k - 1], output.grid[row_k - 1,column_k],
                               output.grid[row_k,column_k + 1], output.grid[row_k + 1,column_k]]
 
@@ -221,7 +219,6 @@ class Board:
                 output.king = (100,100)
             elif blacks == 3 and castles == 1:
                 output.king = (100,100)
-            """
 
         if column > 1:
             if output.grid[row, column - 1].checker == opponent:
@@ -232,7 +229,6 @@ class Board:
                                                                                                          CellType.CASTLE]:
                     pass
                     # self.king = (100,100)
-
 
         if column < 7 and output.grid[row, column + 1].checker == opponent:
             if output.grid[row, column + 2].checker == role or output.grid[row, column + 2].type in [CellType.CAMP, CellType.CASTLE]:
@@ -259,7 +255,7 @@ class Board:
                 if output.grid[row + 2, column].checker == role or output.grid[row + 2, column].type in [CellType.CAMP,
                                                                                                          CellType.CASTLE]:
                     pass
-                    #self.king = (100, 100)
+                    # self.king = (100, 100)
 
         if len(eaten_checkers) > 0:
             ic(f"Eaten checkers: {eaten_checkers}")
@@ -268,6 +264,19 @@ class Board:
             output.set_checker_at_pos(coordinate, CheckerType.EMPTY)
 
         return output
+
+    # These two methods overload the subscript operator ("[]")
+    # to allow a Board object to be indexed like a 2D array,
+    # using simply "obj[r,c]" instead of "obj.grid[r,c]"
+
+    def __getitem__(self, item):
+        r, c = item
+        return self.grid[r, c] if (0 <= r <= 9 and 0 <= c <= 9) else None
+
+    def __setitem__(self, key, value):
+        r, c = key
+        if type(value) == Cell and 0 <= r <= 9 and 0 <= c <= 9:
+            self.grid[r, c] = value
 
     def set_checker_at_pos(self, position, new_checker: CheckerType) -> bool:
         """
