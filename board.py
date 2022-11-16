@@ -423,7 +423,7 @@ class Board:
 
         dest_cell_type = self.grid[destination_r, destination_c].type
 
-        if checker_to_move == CheckerType.WHITE:
+        if checker_to_move in [CheckerType.WHITE, CheckerType.KING]:
             # Deve essere VUOTA
             # Puo' essere una cella NORMAL o una ESCAPE
             return dest_cell_type in [CellType.NORMAL, CellType.ESCAPE]

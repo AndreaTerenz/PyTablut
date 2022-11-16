@@ -2,13 +2,15 @@ import sys
 from argparse import ArgumentParser
 from time import time
 
+from icecream import ic
+
 from Tablut import Tablut
 from aima.games import GameState, alpha_beta_cutoff_search
 from board import CheckerType
 from connect import get_player_port
 from gui import GUI
 
-CLIENT_NAME = "StreetKing"
+CLIENT_NAME = "Maranzablut"
 
 
 def parse_arguments():
@@ -18,27 +20,24 @@ def parse_arguments():
     parser.add_argument("-p", "--port", help="Server connection port (defaults to 5800 for WHITE and 5801 for BLACK)",
                         type=int)
     parser.add_argument("-i", "--ip", help="Server IP address (defaults to localhost)", default="localhost")
-    parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally",
-                        action="store_true")
+    parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally")
+    parser.add_argument("-t", "--max-turns", help="Maximum number of turns for local game (implies --local)",
+                        default=-1, type=int)
     parser.add_argument("-d", "--depth",
                         help="Minmax tree maximum depth (default is 3, value <= 0 to ignore depth cutoff)", default=3,
                         type=int)
     parser.add_argument("--skip-connection",
-                        help="[DEPRECATED, USE --local] If provided, ignore failed connection to server",
-                        action="store_true")
+                        help="[DEPRECATED, USE --local] If provided, ignore failed connection to server")
 
     args = parser.parse_args()
 
-    role = args.role
-    ip = args.ip
-    skip_conn = args.local or args.skip_connection
-    depth = args.depth
+    skip_conn = bool(args.local or (args.max_turns > 0) or args.skip_connection)
 
     port = args.port
     if not port:
-        port = get_player_port(role)
+        port = get_player_port(args.role)
 
-    return role, ip, port, skip_conn, depth
+    return args.role, args.ip, port, skip_conn, args.depth, args.max_turns
 
 
 def run_tests(old_board, new_board, moves, _from, _to, turn):
@@ -78,7 +77,7 @@ def run_tests(old_board, new_board, moves, _from, _to, turn):
 def main():
     print(CLIENT_NAME)
 
-    role, ip, port, skip_conn, depth = parse_arguments()
+    role, ip, port, skip_conn, depth, max_turns = parse_arguments()
     opponent = "BLACK" if role == "WHITE" else "WHITE"
 
     print(f"Role: {role}")
@@ -126,6 +125,8 @@ def main():
         return 0
         """
     else:
+        print(f"Max number of turns per player: {max_turns}")
+
         ui = GUI(title=CLIENT_NAME)
         tablut = Tablut(role)
         tablut.board.print_grid()
@@ -134,15 +135,15 @@ def main():
         print("#####################################")
 
         i = 0
-        for i in range(20):
+        for i in range(max_turns * 2):
             kr, kc = tablut.board.king
             if kr == 100 or kc == 100:
                 break
 
             # Alternate black and white
             turn = role if (i % 2) == 0 else opponent
-
-            print(f"--------{turn}--------")
+            ic.disable()
+            print(f"----------------{turn} (turn {i})")
             tablut.role = turn
             culo = GameState(to_move=turn,
                              utility=tablut.utility(tablut.board, turn),

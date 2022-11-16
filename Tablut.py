@@ -82,7 +82,7 @@ class Tablut(ag.Game):
             param1 = 16 - Nenemies
             param2 = self.__king_in_danger(self.board)
 
-            return param0 + param1 - param2
+            return param0  # + param1# - param2
         if player == "BLACK":
             if king[0]==100 and king[1]==100:
                     return +np.inf
