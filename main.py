@@ -167,9 +167,7 @@ def main():
                 move = alpha_beta_cutoff_search(culo, tablut, depth)
                 after = time()
 
-            if not move:
-                # WHAT DO YOU MEAN MOVE IS NONE???
-                break
+            assert not move is None, "WHAT DO YOU MEAN MOVE IS NONE???"
 
             _from, _to = move[0], move[1]
 

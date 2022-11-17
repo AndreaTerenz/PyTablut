@@ -165,7 +165,7 @@ def alpha_beta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
     best_action = None
     for a in game.actions(state):
         v = min_value(game.result(state, a), best_score, beta, 1)
-        if v > best_score:
+        if v >= best_score:
             best_score = v
             best_action = a
     return best_action
