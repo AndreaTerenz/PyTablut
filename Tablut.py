@@ -32,11 +32,11 @@ class Tablut(ag.Game):
         move_to = move[1]
 
         board_result = self.board.apply_move(move_from, move_to, self.role)
-        return board_result.to_string_grid()
+        return board_result#.to_string_grid()
     
     def __king_in_danger(self,state):
 
-        king=self.board.king
+        king=state.king
         enemies_in_column=0
         enemies_in_row=0
 
@@ -56,30 +56,32 @@ class Tablut(ag.Game):
         else :
             return 0
 
-    def __king_to_escape(self):
-        king = self.board.king
-        if self.board.grid[king].type == CellType.ESCAPE:
+    def __king_to_escape(self,state):
+
+        king = state.king
+        if state.grid[king].type == CellType.ESCAPE:
             return True
 
-        for i in self.board.grid[:, king[1]]:
+        for i in state.grid[:, king[1]]:
             if i.checker != CheckerType.EMPTY or i.checker != CheckerType.KING:
                 return False
-        for i in self.board.grid[king[0], :]:
+        for i in state.grid[king[0], :]:
             if i.checker != CheckerType.EMPTY or i.checker != CheckerType.KING:
                 return False
         return True
 
 
     def utility(self, state, player):
-        if self.__king_to_escape():
+
+        if self.__king_to_escape(state):
             return +np.inf
-        king = self.board.king
+        king = state.king
         if player == "WHITE":
             if king[0] == 100 and king[1] == 100:
                 # se il king è nell'escape ritorna piu infinito
                 return -np.inf
 
-            gr = self.board.grid
+            gr = state.grid
             esc = [(0, 1), (0, 2), (0, 6), (0, 7),
                    (1, 0), (1, 8),
                    (2, 0), (2, 8),
@@ -91,16 +93,16 @@ class Tablut(ag.Game):
             d_to_escapes = np.array([np.linalg.norm(np.array(king) - np.array(e), 2) for e in escapes])
             min_d_to_escapes = int(np.min(d_to_escapes))
 
-            Nenemies = len(self.board.blacks)
+            Nenemies = len(state.blacks)
             param0 = 9 / min_d_to_escapes
             param1 = 16 - Nenemies
-            param2 = self.__king_in_danger(self.board)
+            param2 = self.__king_in_danger(state)
             w0=np.random.uniform(0,1)
             w1 = np.random.uniform(0, 1)
             w2 = np.random.uniform(0, 1)
-            return param0*w0+param1*w1+param2*w2
+            return param0+param1+param2
         if player == "BLACK":
-            if self.__king_to_escape():
+            if self.__king_to_escape(state):
                 return -np.inf
             if king[0]==100 and king[1]==100:
                     return +np.inf
