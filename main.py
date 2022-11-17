@@ -150,13 +150,11 @@ def main():
 
             done = False
             esc = tablut.board.available_escape()
-            move = [(-1, -1), (-1, -1)]
             before = after = time()
             if turn == "WHITE" and esc != (-1, -1):
                 move = tablut.board.king, esc
                 done = True
-
-            if not done:
+            else:
                 tablut.role = turn
                 culo = GameState(to_move=turn,
                                  utility=tablut.utility(tablut.board, turn),
@@ -183,6 +181,9 @@ def main():
             print("Resulting board:")
             tablut.board.print_grid()
             ui.draw(tablut.board)
+
+            if done:
+                break
 
         print("#####################################")
         print(f"GAME OVER ({i + 1} turns)")

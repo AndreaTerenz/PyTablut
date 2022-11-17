@@ -97,10 +97,10 @@ class Tablut(ag.Game):
             param0 = 9 / min_d_to_escapes
             param1 = 16 - Nenemies
             param2 = self.__king_in_danger(state)
-            w0=np.random.uniform(0,1)
+            w0 = np.random.uniform(0, 1)
             w1 = np.random.uniform(0, 1)
-            w2 = np.random.uniform(0, 1)
-            return param0+param1+param2
+            w2 = -np.random.uniform(0, 1)
+            return param0 * w0 + param1 * w1 + param2 * w2
         if player == "BLACK":
             if self.__king_to_escape(state):
                 return -np.inf
