@@ -62,6 +62,7 @@ class Tablut(ag.Game):
 
     def __king_to_escape(self,state):
         king = state.king
+
         if state.grid[king].type == CellType.ESCAPE:
             return True
 
@@ -94,7 +95,7 @@ class Tablut(ag.Game):
             param0 = 9 / min_d_to_escapes
             param1 = 16 - Nenemies
             param2 = self.__king_in_danger(state)
-            w0 = 1  # np.random.uniform(0, 1)
+            w0 = 5  # np.random.uniform(0, 1)
             w1 = 1  # np.random.uniform(0, 1)
             w2 = 1  # np.random.uniform(0, 1)
             return param0 * w0 + param1 * w1 - param2 * w2
