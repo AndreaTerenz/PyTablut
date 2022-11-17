@@ -139,19 +139,20 @@ def main():
         ic.disable()
         i = 0
         for i in range(max_turns * 2):
-            kr, kc = tablut.board.king
-            if kr == 100 or kc == 100:
-                break
-
             # Alternate black and white
             turn = role if (i % 2) == 0 else opponent
 
             print(f"----------------{turn} (turn {i})")
 
+            print("Initial board:")
+            tablut.board.print_grid()
+
             done = False
             esc = tablut.board.available_escape()
             before = after = time()
+
             if turn == "WHITE" and esc != (-1, -1):
+                print(f"Escape cell available in {esc}")
                 move = tablut.board.king, esc
                 done = True
             else:
@@ -161,13 +162,14 @@ def main():
                                  board=tablut.board,
                                  moves=tablut.actions(tablut.board))
 
-                print("Initial board:")
-                tablut.board.print_grid()
-
                 print("Searching move...")
                 before = time()
                 move = alpha_beta_cutoff_search(culo, tablut, depth)
                 after = time()
+
+            if not move:
+                # WHAT DO YOU MEAN MOVE IS NONE???
+                break
 
             _from, _to = move[0], move[1]
 

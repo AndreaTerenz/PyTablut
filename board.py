@@ -132,6 +132,8 @@ class Board:
                             # Everything here applies only to EMPTY cells
                             if cell_type == CellType.ESCAPE:
                                 char_to_print = "-"
+                            elif cell_type == CellType.CASTLE:
+                                char_to_print = "#"
 
                     print(char_to_print, end=" ")
             print()

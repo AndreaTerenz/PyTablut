@@ -57,30 +57,23 @@ class Tablut(ag.Game):
             return 0
 
     def __king_to_escape(self,state):
-
         king = state.king
         if state.grid[king].type == CellType.ESCAPE:
             return True
 
-        for i in state.grid[:, king[1]]:
-            if i.checker != CheckerType.EMPTY or i.checker != CheckerType.KING:
-                return False
-        for i in state.grid[king[0], :]:
-            if i.checker != CheckerType.EMPTY or i.checker != CheckerType.KING:
-                return False
-        return True
-
+        return state.available_escape() != (-1, -1)
 
     def utility(self, state, player):
+        king = state.king
+        mult = +1 if player == "WHITE" else -1
 
         if self.__king_to_escape(state):
-            return +np.inf
-        king = state.king
-        if player == "WHITE":
-            if king[0] == 100 and king[1] == 100:
-                # se il king è nell'escape ritorna piu infinito
-                return -np.inf
+            return np.inf * mult
 
+        if king == (100, 100):
+            return np.inf * -1 * mult
+
+        if player == "WHITE":
             gr = state.grid
             esc = [(0, 1), (0, 2), (0, 6), (0, 7),
                    (1, 0), (1, 8),
@@ -99,18 +92,16 @@ class Tablut(ag.Game):
             param2 = self.__king_in_danger(state)
             w0 = np.random.uniform(0, 1)
             w1 = np.random.uniform(0, 1)
-            w2 = -np.random.uniform(0, 1)
-            return param0 * w0 + param1 * w1 + param2 * w2
+            w2 = np.random.uniform(0, 1)
+            return param0 * w0 + param1 * w1 - param2 * w2
         if player == "BLACK":
-            if self.__king_to_escape(state):
-                return -np.inf
-            if king[0]==100 and king[1]==100:
-                    return +np.inf
-            blacks=self.board.blacks
-            distances=np.array([np.linalg.norm((np.array(king)-np.array(b)),2) for b in blacks])
-            d_mean=int(np.mean(distances))
-            Nenemies = 9-len(self.board.whites)
-            return Nenemies+d_mean
+            blacks = state.blacks
+            distances = np.array([np.linalg.norm((np.array(king) - np.array(b)), 2) for b in blacks])
+            d_mean = int(np.mean(distances))
+            Nenemies = 9 - len(state.whites)
+            w0 = np.random.uniform(0, 1)
+            w1 = np.random.uniform(0, 1)
+            return Nenemies * w0 + d_mean * w1
 
     def terminal_test(self, state):
         """Return True if this is a final state for the game."""
