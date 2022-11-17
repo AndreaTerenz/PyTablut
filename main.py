@@ -20,14 +20,16 @@ def parse_arguments():
     parser.add_argument("-p", "--port", help="Server connection port (defaults to 5800 for WHITE and 5801 for BLACK)",
                         type=int)
     parser.add_argument("-i", "--ip", help="Server IP address (defaults to localhost)", default="localhost")
-    parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally")
+    parser.add_argument("-l", "--local", help="Do not connect to server and run player against itself locally",
+                        action="store_true")
     parser.add_argument("-t", "--max-turns", help="Maximum number of turns for local game (implies --local)",
                         default=-1, type=int)
     parser.add_argument("-d", "--depth",
                         help="Minmax tree maximum depth (default is 3, value <= 0 to ignore depth cutoff)", default=3,
                         type=int)
     parser.add_argument("--skip-connection",
-                        help="[DEPRECATED, USE --local] If provided, ignore failed connection to server")
+                        help="[DEPRECATED, USE --local] If provided, ignore failed connection to server",
+                        action="store_true")
 
     args = parser.parse_args()
 
