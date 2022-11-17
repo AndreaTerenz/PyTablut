@@ -55,10 +55,24 @@ class Tablut(ag.Game):
 
         else :
             return 0
-    
+
+    def __king_to_escape(self):
+        king = self.board.king
+        if self.board.grid[king].type == CellType.ESCAPE:
+            return True
+
+        for i in self.board.grid[:, king[1]]:
+            if i.checker != CheckerType.EMPTY or i.checker != CheckerType.KING:
+                return False
+        for i in self.board.grid[king[0], :]:
+            if i.checker != CheckerType.EMPTY or i.checker != CheckerType.KING:
+                return False
+        return True
+
 
     def utility(self, state, player):
-
+        if self.__king_to_escape():
+            return +np.inf
         king = self.board.king
         if player == "WHITE":
             if king[0] == 100 and king[1] == 100:
@@ -81,9 +95,13 @@ class Tablut(ag.Game):
             param0 = 9 / min_d_to_escapes
             param1 = 16 - Nenemies
             param2 = self.__king_in_danger(self.board)
-
-            return param0  # + param1# - param2
+            w0=np.random.uniform(0,1)
+            w1 = np.random.uniform(0, 1)
+            w2 = np.random.uniform(0, 1)
+            return param0*w0+param1*w1+param2*w2
         if player == "BLACK":
+            if self.__king_to_escape():
+                return -np.inf
             if king[0]==100 and king[1]==100:
                     return +np.inf
             blacks=self.board.blacks

@@ -208,7 +208,7 @@ class Board:
         # caso del re
         row_k, column_k = output.king
         # can't check outside the board
-        if output.king != (100, 100):
+        if output.king != (100, 100) and 0 < row_k < 8 and 0 < column_k < 8:
             king_neighbors = [output.grid[row_k,column_k - 1], output.grid[row_k - 1,column_k],
                               output.grid[row_k,column_k + 1], output.grid[row_k + 1,column_k]]
 
