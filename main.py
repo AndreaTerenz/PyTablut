@@ -10,7 +10,7 @@ from board import CheckerType
 from connect import get_player_port
 from gui import GUI
 
-CLIENT_NAME = "Maranzablut"
+CLIENT_NAME = "topG"
 
 
 def parse_arguments():
@@ -136,6 +136,7 @@ def main():
 
         print("#####################################")
 
+        ic.disable()
         i = 0
         for i in range(max_turns * 2):
             kr, kc = tablut.board.king
@@ -144,32 +145,35 @@ def main():
 
             # Alternate black and white
             turn = role if (i % 2) == 0 else opponent
-            ic.disable()
+
             print(f"----------------{turn} (turn {i})")
-            tablut.role = turn
-            culo = GameState(to_move=turn,
-                             utility=tablut.utility(tablut.board, turn),
-                             board=tablut.board,
-                             moves=tablut.actions(tablut.board))
 
-            print("Initial board:")
-            tablut.board.print_grid()
+            done = False
+            esc = tablut.board.available_escape()
+            move = [(-1, -1), (-1, -1)]
+            before = after = time()
+            if turn == "WHITE" and esc != (-1, -1):
+                move = tablut.board.king, esc
+                done = True
 
-            print("Searching move...")
-            before = time()
-            move = alpha_beta_cutoff_search(culo, tablut, depth)
-            after = time()
+            if not done:
+                tablut.role = turn
+                culo = GameState(to_move=turn,
+                                 utility=tablut.utility(tablut.board, turn),
+                                 board=tablut.board,
+                                 moves=tablut.actions(tablut.board))
+
+                print("Initial board:")
+                tablut.board.print_grid()
+
+                print("Searching move...")
+                before = time()
+                move = alpha_beta_cutoff_search(culo, tablut, depth)
+                after = time()
+
             _from, _to = move[0], move[1]
 
             new_board = tablut.board.apply_move(_from, _to, turn)
-
-            ## Run some sanity checks
-            try:
-                run_tests(tablut.board, new_board, culo.moves, _from, _to, turn)
-            except AssertionError as e:
-                print("[CRITICAL ERROR]")
-                print(e)
-                return -1
 
             tablut.board = new_board
 

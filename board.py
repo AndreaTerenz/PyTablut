@@ -480,3 +480,38 @@ class Board:
                 break
 
         return moves
+
+    def available_escape(self):
+        """
+        Find an Escape cell visible from the king's position (if present)
+
+        :return: a (r,c) tuple with the escape position or (-1,-1) if not found
+        """
+
+        r, c = self.king
+        # Explore left
+        for j in range(c - 1, -1, -1):
+            if self[r, j].checker != CheckerType.EMPTY:
+                break
+            if self[r, j].type == CellType.ESCAPE:
+                return r, j
+        # Explore right
+        for j in range(c + 1, 9):
+            if self[r, j].checker != CheckerType.EMPTY:
+                break
+            if self[r, j].type == CellType.ESCAPE:
+                return r, j
+        # Explore up
+        for i in range(r - 1, -1, -1):
+            if self[i, c].checker != CheckerType.EMPTY:
+                break
+            if self[i, c].type == CellType.ESCAPE:
+                return i, c
+        # Explore down
+        for i in range(r + 1, 9):
+            if self[i, c].checker != CheckerType.EMPTY:
+                break
+            if self[i, c].type == CellType.ESCAPE:
+                return i, c
+
+        return -1, -1

@@ -40,8 +40,8 @@ class Tablut(ag.Game):
         enemies_in_column=0
         enemies_in_row=0
 
-        for i in state.grid[:,king[1]]:
-            if  i.checker == CheckerType.BLACK:
+        for i in state.grid[:, king[1]]:
+            if i.checker == CheckerType.BLACK:
                 enemies_in_column+=1
                 break
 
