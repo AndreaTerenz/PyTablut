@@ -1,6 +1,6 @@
 import sys
 from argparse import ArgumentParser
-from time import time
+from time import time, sleep
 
 from icecream import ic
 
@@ -184,6 +184,8 @@ def main():
 
             if done:
                 break
+
+            sleep(1)
 
         print("#####################################")
         print(f"GAME OVER ({i + 1} turns)")
