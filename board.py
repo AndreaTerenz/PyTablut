@@ -221,26 +221,26 @@ class Board:
                 output.king = (100, 100)
             elif blacks == 3 and castles == 1:
                 output.king = (100, 100)
-        """
-        def bar(r, c, near, far, role):
-            if 1<r<7 and 1<c<7 and output.grid[near].checker == opponent:
+
+        others = []
+
+        if column > 1:
+            others.append([(row, column - 1), (row, column - 2)])
+        if column < 7:
+            others.append([(row, column + 1), (row, column + 2)])
+        if row > 1:
+            others.append([(row - 1, column), (row - 2, column)])
+        if row < 7:
+            others.append([(row + 1, column), (row + 2, column)])
+
+        for o in others:
+            near, far = o
+            if output.grid[near].checker == opponent:
                 if output.grid[far].checker == role or \
                         output.grid[far].type in [CellType.CAMP, CellType.CASTLE]:
                     eaten_checkers.append(near)
 
-        others = [
-            [(row, column-1), (row, column-2)],
-            [(row, column+1), (row, column+2)],
-            [(row-1, column), (row-2, column)],
-            [(row+1, column), (row+2, column)],
-        ]
-
-        for o in others:
-            n,f = o
-            if bar(row, column, n, f, role):
-                eaten_checkers.append(n)
         """
-
         if column > 1 and output.grid[row, column - 1].checker == opponent:
             if output.grid[row, column - 2].checker == role or \
                     output.grid[row, column - 2].type in [CellType.CAMP, CellType.CASTLE]:
@@ -260,6 +260,7 @@ class Board:
             if output.grid[row + 2, column].checker == role or \
                     output.grid[row + 2, column].type in [CellType.CAMP, CellType.CASTLE]:
                 eaten_checkers.append((row + 1, column))
+        """
 
         if output.king_trapped():
             pass  # output.king = (100,100)
