@@ -7,7 +7,7 @@ from icecream import ic
 from Tablut import Tablut
 from aima.games import GameState, alpha_beta_cutoff_search
 from board import CheckerType
-from connect import get_player_port
+from connect import get_player_port, Connection
 from gui import GUI
 
 CLIENT_NAME = "topG"
@@ -27,13 +27,13 @@ def parse_arguments():
     parser.add_argument("-d", "--depth",
                         help="Minmax tree maximum depth (default is 3, value <= 0 to ignore depth cutoff)", default=3,
                         type=int)
-    parser.add_argument("--skip-connection",
-                        help="[DEPRECATED, USE --local] If provided, ignore failed connection to server",
-                        action="store_true")
 
     args = parser.parse_args()
 
-    skip_conn = bool(args.local or (args.max_turns > 0) or args.skip_connection)
+    if args.local and args.max_turns <= 0:
+        args.max_turns = 200
+
+    skip_conn = bool(args.local or (args.max_turns > 0))
 
     port = args.port
     if not port:
@@ -62,10 +62,10 @@ def run_tests(old_board, new_board, moves, _from, _to, turn):
     assert not all_equal, "WHY THE fuck ARE THE CHECKERS LISTS IDENTICAL??"
 
     for move in moves:
-        # every element in culo.moves is a [from, to] move,
+        # every move is a [from, to] move,
         # where "from" and "to" are two tuples
         f, t = move
-        # check that every move in culo.moves is actually possible
+        # check that every move is actually possible
         assert old_board.grid[t].checker == CheckerType.EMPTY, \
             f"ILLEGAL POSSIBLE MOVE: {f} -> {t}"
 
@@ -76,14 +76,101 @@ def run_tests(old_board, new_board, moves, _from, _to, turn):
         f"ILLEGAL FINAL POSITION: {_to} ({old_board.grid[_to].checker})"
 
 
+def run_locally(role, opponent, max_turns, minmax_depth):
+    print(f"Max number of turns per player: {max_turns}")
+
+    ui = GUI(title=CLIENT_NAME)
+    tablut = Tablut(role)
+    tablut.board.print_grid()
+    ui.draw(tablut.board)
+
+    print("#####################################")
+
+    i = 0
+    for i in range(max_turns * 2):
+        # Alternate black and white
+        turn = role if (i % 2) == 0 else opponent
+
+        print(f"----------------{turn} (turn {i})")
+
+        print("Initial board:")
+        tablut.board.print_grid()
+
+        done = False
+        escapes = tablut.board.available_escapes()
+        before = after = time()
+
+        if turn == "WHITE" and len(escapes) > 0:
+            print(f"Escape cell available in {escapes[0]}")
+            move = tablut.board.king, escapes[0]
+            done = True
+        else:
+            tablut.role = turn
+            game_state = GameState(to_move=turn,
+                                   utility=tablut.utility(tablut.board, turn),
+                                   board=tablut.board,
+                                   moves=tablut.actions(tablut.board))
+
+            print("Searching move...")
+            before = time()
+            move = alpha_beta_cutoff_search(game_state, tablut, minmax_depth)
+            after = time()
+
+        assert not move is None, "WHAT DO YOU MEAN MOVE IS NONE???"
+
+        _from, _to = move[0], move[1]
+
+        new_board = tablut.board.apply_move(_from, _to, turn)
+
+        tablut.board = new_board
+
+        print(f"Move: {move[0]} -> {move[1]}")
+        print(f"Found in: {(after - before):.3f} s")
+
+        print("Resulting board:")
+        tablut.board.print_grid()
+        ui.draw(tablut.board)
+
+        if done:
+            break
+
+        # sleep(1)
+
+    print("#####################################")
+    print(f"GAME OVER ({i + 1} turns)")
+    tablut.board.print_grid()
+
+def quit_game(connection, exit_code=0, msg=""):
+    """
+    Simple function to handle quitting, both with a proper game over
+    and in case of errors
+
+    :param connection: Connection object (to be closed before quitting)
+    :param exit_code: Program exit code (default 0)
+    :param msg: Optional additional message to be printed (ideally, winning player if exit_code==0 and error message if exit_code!=0 - default "")
+    """
+
+    if msg != "":
+        if exit_code == 0:
+            print(f"{msg} wins")
+        else:
+            print(f"FAILURE - {msg}")
+
+    print("GAME OVER")
+
+    connection.close()
+
+    sys.exit(exit_code)
+
 def main():
+    ic.disable()
     print(CLIENT_NAME)
 
-    role, ip, port, skip_conn, depth, max_turns = parse_arguments()
+    role, ip, port, skip_conn, minmax_depth, max_turns = parse_arguments()
     opponent = "BLACK" if role == "WHITE" else "WHITE"
 
     print(f"Role: {role}")
-    print(f"Minmax depth: {depth}")
+    print(f"Minmax depth: {minmax_depth}")
     print(f"Run locally? {skip_conn}")
 
     print("#####################################")
@@ -91,105 +178,98 @@ def main():
     if not skip_conn:
         print(f"IP address: {ip}")
         print(f"TCP port: {port}")
-        """
+
         conn = Connection(CLIENT_NAME, role, server_ip=ip, server_port=port)
-        b = Board()
-        player = RandomPlayer(role, b)
-        try:
-            conn.connect_to_server()
-        except:
-            return -1
 
-        
-        if role == "BLACK":
-            new_state = conn.receive_new_state()
-            b.update_state(new_state)
+        print("Connecting to server...", end="", flush=True)
+        if not conn.connect_to_server():
+            quit_game(conn, exit_code=-1, msg="Connection failed (Is the server running?)")
+        else:
+            print("Connected")
 
-        receive_failed = False
-        game_over = False
-        while not receive_failed and not game_over:
-            move = player.play()
-            if len(move) == 0:
-                # The player can't find any moves to play
-                game_over = True
-            else:
-                f, t = move
-                conn.send_move(f, t)
-                new_state = conn.receive_new_state()
-                receive_failed = new_state is None
-
-                if not receive_failed:
-                    b.update_state(new_state)
-                    game_over = b.is_game_over()
-
-        ic("Game done!")
-        conn.close()
-        return 0
-        """
-    else:
-        print(f"Max number of turns per player: {max_turns}")
-
-        ui = GUI(title=CLIENT_NAME)
         tablut = Tablut(role)
-        tablut.board.print_grid()
-        ui.draw(tablut.board)
+
+        turn = "WHITE"
+
+        print("Waiting for sync...", end="", flush=True)
+        if not conn.receive_new_state():
+            quit_game(conn, exit_code=-1, msg="sync not received")
+
+        print("Received")
+        print("STARTING GAME")
 
         print("#####################################")
 
-        ic.disable()
         i = 0
-        for i in range(max_turns * 2):
-            # Alternate black and white
-            turn = role if (i % 2) == 0 else opponent
+        while True:
+            # WHITE plays on even turns, BLACK on odd
+            turn = "WHITE" if i % 2 == 0 else "BLACK"
+            print(f"----------{turn} [{'me' if turn == role else 'opponent'} - turn #{i}]")
 
-            print(f"----------------{turn} (turn {i})")
+            if turn == role:
+                tablut.board.print_grid(title="Current board:")
 
-            print("Initial board:")
-            tablut.board.print_grid()
+                print("Searching move...", end="", flush=True)
 
-            done = False
-            esc = tablut.board.available_escape()
-            before = after = time()
-
-            if turn == "WHITE" and esc != (-1, -1):
-                print(f"Escape cell available in {esc}")
-                move = tablut.board.king, esc
-                done = True
-            else:
-                tablut.role = turn
-                culo = GameState(to_move=turn,
-                                 utility=tablut.utility(tablut.board, turn),
-                                 board=tablut.board,
-                                 moves=tablut.actions(tablut.board))
-
-                print("Searching move...")
                 before = time()
-                move = alpha_beta_cutoff_search(culo, tablut, depth)
+
+                # When BLACK plays, don't bother looking for available escapes
+                escapes = tablut.board.available_escapes() if role == "WHITE" else []
+                king_has_escape = len(escapes) > 0
+                move = (tablut.board.king, escapes[0]) if king_has_escape else tablut.search_move(minmax_depth)
+                ##########
+
                 after = time()
 
-            assert not move is None, "WHAT DO YOU MEAN MOVE IS NONE???"
+                f, t = move
+                tablut.board = tablut.board.apply_move(f, t, role)
 
-            _from, _to = move[0], move[1]
+                print(f"found: {f} -> {t}")
+                print(f"search took: {(after - before):.3f} s")
 
-            new_board = tablut.board.apply_move(_from, _to, turn)
+                tablut.board.print_grid(title="Updated board:")
+                print("Sending nudes...", end="", flush=True)
 
-            tablut.board = new_board
+                # Did you manage to send the move?
+                try:
+                    conn.send_move(f, t)
+                    print(f"sent")
+                except BrokenPipeError:
+                    quit_game(conn, exit_code=-1, msg="Move not sent [broken connection]")
+                except ConnectionResetError:
+                    quit_game(conn, exit_code=-1, msg=f"Move not sent [connection reset by peer]")
+                ##########
 
-            print(f"Move: {move[0]} -> {move[1]}")
-            print(f"Found in: {(after - before):.3f} s")
+                # turn = opponent
+            elif turn == opponent:
+                print("Waiting for opponent move...", end="", flush=True)
 
-            print("Resulting board:")
-            tablut.board.print_grid()
-            ui.draw(tablut.board)
+                # Did you receive the next game state?
+                try:
+                    received = conn.receive_new_state()
+                    while ic(received[1]) == opponent:
+                        received = conn.receive_new_state()
 
-            if done:
-                break
+                    print(f"received")
+                except ConnectionError:
+                    received = None  # pointless, since the game will now quit
+                    quit_game(conn, exit_code=-1, msg="New state not received")
+                ##########
 
-            # sleep(1)
+                new_state, next_turn = received
 
-        print("#####################################")
-        print(f"GAME OVER ({i + 1} turns)")
-        tablut.board.print_grid()
+                # Did someone just win?
+                if ic(next_turn) in ["WHITEWIN", "BLACKWIN"]:
+                    quit_game(conn, msg=str(next_turn).removesuffix("WIN"))
+                ##########
+
+                # turn = next_turn
+                tablut.board.update_state(new_state)
+                tablut.board.print_grid(title="Updated board received:")
+
+            i += 1
+    else:
+        run_locally(role, opponent, max_turns, minmax_depth)
 
     return 0
 

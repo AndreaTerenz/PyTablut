@@ -3,8 +3,6 @@
 import json
 import socket
 import struct
-import sys
-from time import sleep
 
 from icecream import ic
 
@@ -38,15 +36,16 @@ class Connection:
         Attempts to connect to the game server
 
         :raises ConnectionFailedError: The connection can't be established
+        :returns: True if the connection attempt was successful
         """
         try:
             self.socket.connect((self.ip, self.port))
-            ic(f"Connected to {self.ip}:{self.port} as {self.color} player")
-            self.__send_string(self.name)
+            # ic(f"Connected to {self.ip}:{self.port} as {self.color} player")
+            return self.__send_string(self.name)
         except socket.error as e:
-            ic(f"CONNECTION FAILED! ({e})")
+            #ic(f"CONNECTION FAILED! ({e})")
             self.socket = None
-            raise ConnectionFailedError(self.ip, self.port, self.name, self.color, e)
+            return False
 
     def send_move(self, from_pos: tuple[int], to_pos: tuple[int]):
         """
@@ -54,6 +53,7 @@ class Connection:
 
         :param from_pos: Move starting cell
         :param to_pos: Move destination cell
+        :returns: True if the move was sent successfully
         """
 
         # Encode the input parameters into a dictionary and transform it into a JSON string
@@ -63,7 +63,7 @@ class Connection:
             "turn": self.color,
         })
 
-        self.__send_string(data)
+        return self.__send_string(data)
 
     def __send_string(self, string: str):
         """
@@ -71,13 +71,20 @@ class Connection:
         by its length)
 
         :param string: data string to send
+        :returns: True if the string was sent successfully
+        :raises ConnectionError:
         """
 
-        # Using struct lib in order to represent data as python bytes objects
-        # struct.pack(format, val1, val2...)
-        # '>i' means Big Endian(used in network), integer returns a bytes object.
-        self.socket.send(struct.pack('>i', len(string)))
-        self.socket.send(string.encode())
+        try:
+            # Using struct lib in order to represent data as python bytes objects
+            # struct.pack(format, val1, val2...)
+            # '>i' means Big Endian(used in network), integer returns a bytes object.
+            self.socket.send(struct.pack('>i', len(string)))
+            self.socket.send(string.encode())
+        except ConnectionError as ce:
+            raise ce
+
+        return True
 
     def __receive_bytes(self, n):
         """
@@ -90,14 +97,11 @@ class Connection:
         data = b''
 
         while len(data) < n:
-            try:
-                packet = self.socket.recv(n - len(data))
-                if not packet:
-                    return None
-                data += packet
-            except ConnectionResetError:
-                raise ConnectionResetError
+            packet = self.socket.recv(ic(n) - len(data))
 
+            if not ic(packet):
+                return None
+            data += packet
         return data
 
     def receive_new_state(self):
@@ -107,20 +111,20 @@ class Connection:
         :return: Board state as grid
         """
 
-        try:
-            response_len = struct.unpack('>i', self.__receive_bytes(4))[0]
-            server_response = self.socket.recv(response_len)
+        bytes = self.__receive_bytes(4)
+        response_len = struct.unpack('>i', ic(bytes))[0]
+        server_response = self.socket.recv(response_len)
 
-            return extract_board_state(server_response)
-        except ConnectionResetError:
-            return None
+        data = json.loads(server_response)
+
+        return data.get("board"), data.get("turn")
 
     def close(self):
         """
         Close socket connection. Note that the socket will be unusable afterwards!
         """
-
-        self.socket.close()
+        if self.socket:
+            self.socket.close()
 
 def extract_board_state(json_str):
     """
@@ -143,10 +147,10 @@ def encode_grid_pos(pos : tuple[int]) -> str:
     :return: Encoded position as string
     """
 
-    row, col = pos[0], pos[1]
+    row, col = ic(pos)[0], pos[1]
     # 97 is the value of 'a' (column #0) in the ASCII table
     # The chr(n) method converts and ASCII code to its corresponding carachter
-    return f"{chr(97 + col)}{1+row}"
+    return ic(f"{chr(97 + col)}{1 + row}")
 
 def get_player_port(color: str) -> int:
     """
@@ -157,26 +161,3 @@ def get_player_port(color: str) -> int:
     """
 
     return Connection.WHITE_PORT if color == "WHITE" else Connection.BLACK_PORT
-
-class ConnectionFailedError(Exception):
-    def __init__(self, ip, port, name, color, err):
-        self.ip = ip
-        self.port = port
-        self.name = name
-        self.color = color
-        self.error = err
-
-    def __str__(self):
-        return f"Failed to connect to server '{self.ip}' on port '{self.port}' as player '{self.name}' [{self.error}]"
-
-if __name__ == "__main__":
-    col = sys.argv[1] if len(sys.argv) > 0 else "WHITE"
-    conn = Connection("test", col)
-
-    try:
-        conn.connect_to_server()
-        sleep(50000)
-    except ConnectionFailedError as cfe:
-        ic(cfe)
-
-    conn.close()

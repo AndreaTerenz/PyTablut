@@ -3,7 +3,7 @@ from enum import Enum
 import numpy as np
 from icecream import ic
 
-ic.disable()
+# ic.disable()
 
 
 class CellType(Enum):
@@ -102,12 +102,16 @@ class Board:
         for w in self.whites:
             self.grid[w[0], w[1]] = Cell(CellType.NORMAL, CheckerType.WHITE)
 
-    def print_grid(self, ascii_art = True):
+    def print_grid(self, ascii_art=True, title=""):
         """
         Print current grid state
 
         :param ascii_art: If True, print the grid in ASCII art (default True)
+        :param title: If a non-empty string, will be printed before the board
         """
+        if title != "":
+            print(title)
+
         for i in range(9):
             for j in range(9):
                 cell_type = self.grid[i][j].type
@@ -160,7 +164,7 @@ class Board:
                         self.blacks.append((i, j))
                     case "KING":
                         self.grid[i][j].checker = CheckerType.KING
-                        self.king = (i,j)
+                        self.king = (i, j)
 
     def apply_move(self, from_cell, to_cell, _role):
         """
@@ -207,6 +211,7 @@ class Board:
         # caso del re
         row_k, column_k = output.king
         # can't check outside the board
+        """
         if output.king != (100, 100) and 0 < row_k < 8 and 0 < column_k < 8:
             king_neighbors = [output.grid[row_k, column_k - 1], output.grid[row_k - 1, column_k],
                               output.grid[row_k, column_k + 1], output.grid[row_k + 1, column_k]]
@@ -218,6 +223,7 @@ class Board:
                 output.king = (100, 100)
             elif blacks == 3 and castles == 1:
                 output.king = (100, 100)
+                """
 
         others = []
 
@@ -263,7 +269,7 @@ class Board:
             pass  # output.king = (100,100)
 
         if len(eaten_checkers) > 0:
-            ic(f"Eaten checkers: {eaten_checkers}")
+            pass #ic(f"Eaten checkers: {eaten_checkers}")
         # rimuovo le pedine mangiate
         for coordinate in eaten_checkers:
             output.set_checker_at_pos(coordinate, CheckerType.EMPTY)
@@ -305,7 +311,7 @@ class Board:
                 case CheckerType.BLACK:
                     self.blacks.remove(position)
                 case CheckerType.KING:
-                    ic("....what do you mean you want to DELETE the king? Are you gay")
+                    #ic("....what do you mean you want to DELETE the king? Are you gay")
                     return False
         else:
             match new_checker:
@@ -487,37 +493,42 @@ class Board:
 
         return moves
 
-    def available_escape(self):
+    def available_escapes(self):
         """
-        Find an Escape cell visible from the king's position (if present)
+        Find all Escape cells visible from the king's position (if any exist)
 
-        :return: a (r,c) tuple with the escape position or (-1,-1) if not found
+        :return: the list of (r,c) positions of the visible escapes (empty list if none are found)
         """
-
         r, c = self.king
+
+        if 3<=r<=5 and 3<=c<=5:
+            # Around the center of the board there are definetely no visible escapes
+            return []
+
+        escapes = []
         # Explore left
         for j in range(c - 1, -1, -1):
             if self[r, j].checker != CheckerType.EMPTY:
                 break
             if self[r, j].type == CellType.ESCAPE:
-                return r, j
+                escapes.append((r, j))
         # Explore right
         for j in range(c + 1, 9):
             if self[r, j].checker != CheckerType.EMPTY:
                 break
             if self[r, j].type == CellType.ESCAPE:
-                return r, j
+                escapes.append((r, j))
         # Explore up
         for i in range(r - 1, -1, -1):
             if self[i, c].checker != CheckerType.EMPTY:
                 break
             if self[i, c].type == CellType.ESCAPE:
-                return i, c
+                escapes.append((i, c))
         # Explore down
         for i in range(r + 1, 9):
             if self[i, c].checker != CheckerType.EMPTY:
                 break
             if self[i, c].type == CellType.ESCAPE:
-                return i, c
+                escapes.append((i, c))
 
-        return -1, -1
+        return escapes
