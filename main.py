@@ -12,6 +12,13 @@ from gui import GUI
 
 CLIENT_NAME = "topG"
 
+# Exit error codes
+FAILED_CONN_ERR = 1
+FAILED_SYNC_ERR = 2
+BROKEN_PIPE_ERR = 3
+CONN_RESET_ERR = 4
+STATE_UPDATE_ERR = 5
+
 
 def parse_arguments():
     parser = ArgumentParser()
@@ -164,11 +171,11 @@ def quit_game(connection, exit_code=0, msg=""):
 
 def main():
     ic.disable()
-    print(CLIENT_NAME)
 
     role, ip, port, skip_conn, minmax_depth, max_turns = parse_arguments()
     opponent = "BLACK" if role == "WHITE" else "WHITE"
 
+    print(f"#####################################{CLIENT_NAME} TABLUT CLIENT")
     print(f"Role: {role}")
     print(f"Minmax depth: {minmax_depth}")
     print(f"Run locally? {skip_conn}")
@@ -183,17 +190,15 @@ def main():
 
         print("Connecting to server...", end="", flush=True)
         if not conn.connect_to_server():
-            quit_game(conn, exit_code=-1, msg="Connection failed (Is the server running?)")
+            quit_game(conn, exit_code=FAILED_CONN_ERR, msg="Connection failed (Is the server running?)")
         else:
             print("Connected")
 
         tablut = Tablut(role)
 
-        turn = "WHITE"
-
         print("Waiting for sync...", end="", flush=True)
         if not conn.receive_new_state():
-            quit_game(conn, exit_code=-1, msg="sync not received")
+            quit_game(conn, exit_code=FAILED_SYNC_ERR, msg="sync not received")
 
         print("Received")
         print("STARTING GAME")
@@ -235,9 +240,9 @@ def main():
                     conn.send_move(f, t)
                     print(f"sent")
                 except BrokenPipeError:
-                    quit_game(conn, exit_code=-1, msg="Move not sent [broken connection]")
+                    quit_game(conn, exit_code=BROKEN_PIPE_ERR, msg="Move not sent [broken connection]")
                 except ConnectionResetError:
-                    quit_game(conn, exit_code=-1, msg=f"Move not sent [connection reset by peer]")
+                    quit_game(conn, exit_code=CONN_RESET_ERR, msg=f"Move not sent [connection reset by peer]")
                 ##########
 
                 # turn = opponent
@@ -247,13 +252,14 @@ def main():
                 # Did you receive the next game state?
                 try:
                     received = conn.receive_new_state()
+                    # Having to do this is kinda gay ngl
                     while ic(received[1]) == opponent:
                         received = conn.receive_new_state()
 
                     print(f"received")
                 except ConnectionError:
                     received = None  # pointless, since the game will now quit
-                    quit_game(conn, exit_code=-1, msg="New state not received")
+                    quit_game(conn, exit_code=STATE_UPDATE_ERR, msg="New state not received")
                 ##########
 
                 new_state, next_turn = received
@@ -263,7 +269,6 @@ def main():
                     quit_game(conn, msg=str(next_turn).removesuffix("WIN"))
                 ##########
 
-                # turn = next_turn
                 tablut.board.update_state(new_state)
                 tablut.board.print_grid(title="Updated board received:")
 
