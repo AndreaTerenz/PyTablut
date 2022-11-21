@@ -65,10 +65,7 @@ class Board:
     def __init__(self):
         self.grid = np.zeros((9,9), dtype=np.dtype(Cell))
 
-        for i in range(9):
-            for j in range(9):
-                self.grid[i,j] = Cell(CellType.NORMAL, CheckerType.EMPTY)
-
+        self.grid[:,:]=Cell(CellType.NORMAL, CheckerType.EMPTY)
         self.whites = []
         self.blacks = []
         self.king = (4,4)
@@ -235,7 +232,7 @@ class Board:
 
         for o in others:
             near, far = o
-            if output.grid[near].checker == opponent:
+            if output.grid[near].checker == opponent and output.grid[near].type != CellType.CAMP:
                 if output.grid[far].checker == role or \
                         output.grid[far].type in [CellType.CAMP, CellType.CASTLE]:
                     eaten_checkers.append(near)
