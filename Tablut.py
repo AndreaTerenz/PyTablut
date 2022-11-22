@@ -142,8 +142,55 @@ class Tablut(Game):
         self.board.print_grid()
 
     def search_move(self, depth):
+        # Avoid minmax if possible
+        possible_moves = self.actions(self.board)
+        escapes = self.board.available_escapes()
+
+        if len(escapes) > 0:
+            if self.role == "WHITE":
+                return self.board.king, escapes[0]
+            elif self.role == "BLACK":
+                if len(escapes) == 1:
+                    k_pos = self.board.king
+                    esc = escapes[0]
+
+                    # 0 == vertically (because king.row == escape.row)
+                    # 1 == horizontally (because king.column == escape.column)
+                    # Do I need to move vertically or horizontally to block the king?
+
+                    def is_between(a, m, b) -> bool:
+                        """
+                        Check if a cell M is between two other cells A and B. A and B must be on the same
+                        row or on the same line
+
+                        :param a: position A
+                        :param m: position M to be checked
+                        :param b: position B
+                        """
+
+                        ar, ac = a
+                        br, bc = b
+
+                        if not (ar == br or ac == bc):
+                            return False
+
+                        if ar == br and ac == bc:
+                            return m == a
+
+                        mr, mc = m
+
+                        return (min(ar, br) <= mr <= max(ar, br) and ac == mc == bc) \
+                               or (ar == mr == br and min(ac, bc) <= mc <= max(ac, bc))
+
+                    pm = [move for move in possible_moves if is_between(k_pos, move[1], esc)]
+
+                    if len(pm) > 0:
+                        return pm[0]
+                else:
+                    pass
+
         game_state = GameState(to_move=self.role,
                                utility=self.utility(self.board, self.role),
                                board=self.board,
-                               moves=self.actions(self.board))
+                               moves=possible_moves)
         return alpha_beta_cutoff_search(game_state, self, depth)

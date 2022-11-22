@@ -6,7 +6,6 @@ from icecream import ic
 
 from Tablut import Tablut
 from aima.games import GameState, alpha_beta_cutoff_search
-from board import CheckerType
 from connect import get_player_port, Connection
 from gui import GUI
 
@@ -47,41 +46,6 @@ def parse_arguments():
         port = get_player_port(args.role)
 
     return args.role, args.ip, port, skip_conn, args.depth, args.max_turns
-
-
-def run_tests(old_board, new_board, moves, _from, _to, turn):
-    # Check that the new board is actually different
-    all_equal = True
-    for i in range(9):
-        for j in range(9):
-            if old_board.grid[i, j] != new_board.grid[i, j]:
-                all_equal = False
-                break
-        if not all_equal:
-            break
-
-    assert not all_equal, "WHY THE fuck ARE THE TWO BOARDS IDENTICAL??"
-
-    # check that list of checkers for the current turn has been updated
-    old_checkers = old_board.get_checkers_for_role(turn)
-    new_checkers = new_board.get_checkers_for_role(turn)
-    all_equal = (set(old_checkers) == set(new_checkers))
-    assert not all_equal, "WHY THE fuck ARE THE CHECKERS LISTS IDENTICAL??"
-
-    for move in moves:
-        # every move is a [from, to] move,
-        # where "from" and "to" are two tuples
-        f, t = move
-        # check that every move is actually possible
-        assert old_board.grid[t].checker == CheckerType.EMPTY, \
-            f"ILLEGAL POSSIBLE MOVE: {f} -> {t}"
-
-    expected_checker = [CheckerType.WHITE, CheckerType.KING] if turn == "WHITE" else [CheckerType.BLACK]
-    assert old_board.grid[_from].checker in expected_checker, \
-        f"ILLEGAL STARTING POSITION: {_from} ({old_board.grid[_from].checker})"
-    assert old_board.grid[_to].checker == CheckerType.EMPTY, \
-        f"ILLEGAL FINAL POSITION: {_to} ({old_board.grid[_to].checker})"
-
 
 def run_locally(role, opponent, max_turns, minmax_depth):
     print(f"Max number of turns per player: {max_turns}")
@@ -175,7 +139,7 @@ def main():
     role, ip, port, skip_conn, minmax_depth, max_turns = parse_arguments()
     opponent = "BLACK" if role == "WHITE" else "WHITE"
 
-    print(f"#####################################{CLIENT_NAME} TABLUT CLIENT")
+    print(f"##################################### {CLIENT_NAME} TABLUT CLIENT")
     print(f"Role: {role}")
     print(f"Minmax depth: {minmax_depth}")
     print(f"Run locally? {skip_conn}")
@@ -217,13 +181,7 @@ def main():
                 print("Searching move...", end="", flush=True)
 
                 before = time()
-
-                # When BLACK plays, don't bother looking for available escapes
-                escapes = tablut.board.available_escapes() if role == "WHITE" else []
-                king_has_escape = len(escapes) > 0
-                move = (tablut.board.king, escapes[0]) if king_has_escape else tablut.search_move(minmax_depth)
-                ##########
-
+                move = tablut.search_move(minmax_depth)
                 after = time()
 
                 f, t = move
@@ -245,7 +203,6 @@ def main():
                     quit_game(conn, exit_code=CONN_RESET_ERR, msg=f"Move not sent [connection reset by peer]")
                 ##########
 
-                # turn = opponent
             elif turn == opponent:
                 print("Waiting for opponent move...", end="", flush=True)
 
