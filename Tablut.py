@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+from icecream import ic
 
 from aima.games import Game, GameState, alpha_beta_cutoff_search
 from board import CheckerType, CellType, Board
@@ -102,17 +103,20 @@ class Tablut(Game):
 
         if player == "WHITE":
             gr = state.grid
-            esc = [(0, 1), (0, 2), (0, 6), (0, 7),
-                   (1, 0), (1, 8),
-                   (2, 0), (2, 8),
-                   (6, 0), (6, 8),
-                   (7, 0), (7, 8),
-                   (8, 1), (8, 2), (8, 6), (8, 7), ]
-            escapes = [e for e in esc if gr[e].type == CellType.ESCAPE and gr[e].checker == CheckerType.EMPTY]
-
+            ic.enable()
+            escapes = [(0, 1), (0, 2), (0, 6), (0, 7),
+                       (1, 0), (1, 8),
+                       (2, 0), (2, 8),
+                       (6, 0), (6, 8),
+                       (7, 0), (7, 8),
+                       (8, 1), (8, 2), (8, 6), (8, 7), ]
+            ic(escapes)
+            escapes = [e for e in escapes if gr[e].type == CellType.ESCAPE and gr[e].checker == CheckerType.EMPTY]
+            ic(escapes)
             d_to_escapes = np.array([distance_between_cells(king, e, squared=True) for e in escapes])
-            min_d_to_escapes = int(np.min(d_to_escapes))
 
+            min_d_to_escapes = int(np.min(ic(d_to_escapes)))
+            ic.disable()
             Nenemies = len(state.blacks)
             param0 = 9 / math.sqrt(min_d_to_escapes)
             param1 = 16 - Nenemies

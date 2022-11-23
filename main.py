@@ -131,11 +131,12 @@ def quit_game(connection, exit_code=0, msg=""):
     :param msg: Optional additional message to be printed (ideally, winning player if exit_code==0 and error message if exit_code!=0 - default "")
     """
 
-    if msg != "":
-        if exit_code == 0:
-            print(f"{msg} wins")
-        else:
-            print(f"FAILURE - {errors[exit_code]}")
+    if not msg in ["WHITE", "BLACK"] and msg != "":
+        print(msg)
+    elif exit_code == 0:
+        print(f"{msg} wins")
+    else:
+        print(f"FAILURE - {errors[exit_code]}")
 
     print("GAME OVER")
 
