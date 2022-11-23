@@ -3,9 +3,9 @@ from enum import Enum
 import numpy as np
 from icecream import ic
 
+
 # ic.disable()
 
-POSITIONS = [(i, j) for i in range(0, 9) for j in range(0, 9)]
 
 class CellType(Enum):
     """
@@ -57,19 +57,6 @@ class Cell:
     def copy(self):
         return Cell(self.type, self.checker)
 
-    def __eq__(self, other):
-        if other is tuple and len(other) == 2:
-            t, c = other
-            return t is CellType and c is CheckerType and t == self.type and c == self.checker
-        elif other is CheckerType:
-            return self.checker == other
-        elif other is CellType:
-            return self.type == other
-        elif other is Cell:
-            return self.type == other.type and self.checker == other.checker
-
-        return False
-
 class Board:
     """
     Represents the global state of the game
@@ -77,56 +64,45 @@ class Board:
 
     empty_cell = Cell(CellType.NORMAL, CheckerType.EMPTY)
 
-    def __init__(self, copy_from=None):
+    def __init__(self):
         self.grid = np.zeros((9, 9), dtype=np.dtype(Cell))
+
+        self.grid[:, :] = Cell(CellType.NORMAL, CheckerType.EMPTY)
         self.whites = []
         self.blacks = []
-        self.king = ()
+        self.king = (4, 4)
 
-        if copy_from:
-            """
-            for i in range(9):
-                for j in range(9):
-                    board_copy.grid[i,j] = self.grid[i,j].copy()
-            """
-            for p in POSITIONS:
-                self.grid[p] = copy_from.grid[p].copy()
+        self.grid[4, 4] = Cell(CellType.CASTLE, CheckerType.KING)
 
-            self.whites = copy_from.whites.copy()
-            self.blacks = copy_from.blacks.copy()
-            self.king = copy_from.king
-        else:
-            self.grid[:, :] = Cell(CellType.NORMAL, CheckerType.EMPTY)
-            self.king = (4, 4)
+        # Escape cells
+        escapes = [(0, 1), (0, 2), (0, 6), (0, 7),
+                   (1, 0), (1, 8),
+                   (2, 0), (2, 8),
+                   (6, 0), (6, 8),
+                   (7, 0), (7, 8),
+                   (8, 1), (8, 2), (8, 6), (8, 7), ]
 
-            self.grid[self.king] = Cell(CellType.CASTLE, CheckerType.KING)
+        # Black camps
+        self.blacks = [(0, 3), (0, 4), (0, 5),
+                       (1, 4),
+                       (3, 0), (3, 8),
+                       (4, 0), (4, 1), (4, 7), (4, 8),
+                       (5, 0), (5, 8),
+                       (7, 4),
+                       (8, 3), (8, 4), (8, 5)]
 
-            # Escape cells
-            escapes = [(0, 1), (0, 2), (0, 6), (0, 7),
-                       (1, 0), (1, 8),
-                       (2, 0), (2, 8),
-                       (6, 0), (6, 8),
-                       (7, 0), (7, 8),
-                       (8, 1), (8, 2), (8, 6), (8, 7), ]
+        self.whites = [(2, 4),
+                       (3, 4),
+                       (4, 2), (4, 3), (4, 5), (4, 6),
+                       (5, 4),
+                       (6, 4)]
 
-            # Black camps
-            self.blacks = [(0, 3), (0, 4), (0, 5),
-                           (1, 4),
-                           (3, 0), (3, 8),
-                           (4, 0), (4, 1), (4, 7), (4, 8),
-                           (5, 0), (5, 8),
-                           (7, 4),
-                           (8, 3), (8, 4), (8, 5)]
-
-            self.whites = [(2, 4),
-                           (3, 4),
-                           (4, 2), (4, 3), (4, 5), (4, 6),
-                           (5, 4),
-                           (6, 4)]
-
-            self.grid[escapes] = Cell(CellType.ESCAPE, CheckerType.EMPTY)
-            self.grid[self.blacks] = Cell(CellType.CAMP, CheckerType.BLACK)
-            self.grid[self.whites] = Cell(CellType.NORMAL, CheckerType.WHITE)
+        for e in escapes:
+            self.grid[e[0], e[1]] = Cell(CellType.ESCAPE, CheckerType.EMPTY)
+        for c in self.blacks:
+            self.grid[c[0], c[1]] = Cell(CellType.CAMP, CheckerType.BLACK)
+        for w in self.whites:
+            self.grid[w[0], w[1]] = Cell(CellType.NORMAL, CheckerType.WHITE)
 
     def print_grid(self, ascii_art=True, title=""):
         """
@@ -398,7 +374,17 @@ class Board:
         :return: a Board object with the same state as self
         """
 
-        return Board(copy_from=self)
+        board_copy = Board()
+
+        for i in range(9):
+            for j in range(9):
+                board_copy.grid[i, j] = self.grid[i, j].copy()
+
+        board_copy.whites = self.whites.copy()
+        board_copy.blacks = self.blacks.copy()
+        board_copy.king = self.king
+
+        return board_copy
 
     def to_string_grid(self):
         """
