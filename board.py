@@ -64,15 +64,16 @@ class Board:
 
     empty_cell = Cell(CellType.NORMAL, CheckerType.EMPTY)
 
-    def __init__(self):
+    # FIXME: This keep_empty thing is beyond ugly
+    def __init__(self, keep_empty=False):
         self.grid = np.zeros((9, 9), dtype=np.dtype(Cell))
-
-        self.grid[:, :] = Cell(CellType.NORMAL, CheckerType.EMPTY)
         self.whites = []
         self.blacks = []
         self.king = (4, 4)
 
-        self.grid[4, 4] = Cell(CellType.CASTLE, CheckerType.KING)
+        self.grid[:, :] = Cell(CellType.NORMAL, CheckerType.EMPTY)
+
+        self.grid[self.king] = Cell(CellType.CASTLE, CheckerType.KING)
 
         # Escape cells
         escapes = [(0, 1), (0, 2), (0, 6), (0, 7),
@@ -374,7 +375,7 @@ class Board:
         :return: a Board object with the same state as self
         """
 
-        board_copy = Board()
+        board_copy = Board(keep_empty=True)
 
         for i in range(9):
             for j in range(9):
