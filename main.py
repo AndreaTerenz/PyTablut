@@ -17,6 +17,16 @@ FAILED_SYNC_ERR = 2
 BROKEN_PIPE_ERR = 3
 CONN_RESET_ERR = 4
 STATE_UPDATE_ERR = 5
+CONN_TIMEOUT_ERR = 6
+
+errors = {
+    FAILED_CONN_ERR: "Connection failed (Is the server running?)",
+    FAILED_SYNC_ERR: "Sync not received",
+    BROKEN_PIPE_ERR: "Broken connection",
+    CONN_RESET_ERR: "Connection reset by peer",
+    STATE_UPDATE_ERR: "Failed to receive update",
+    CONN_TIMEOUT_ERR: "Connection timed out",
+}
 
 
 def parse_arguments():
@@ -125,7 +135,7 @@ def quit_game(connection, exit_code=0, msg=""):
         if exit_code == 0:
             print(f"{msg} wins")
         else:
-            print(f"FAILURE - {msg}")
+            print(f"FAILURE - {errors[exit_code]}")
 
     print("GAME OVER")
 
@@ -154,7 +164,7 @@ def main():
 
         print("Connecting to server...", end="", flush=True)
         if not conn.connect_to_server():
-            quit_game(conn, exit_code=FAILED_CONN_ERR, msg="Connection failed (Is the server running?)")
+            quit_game(conn, exit_code=FAILED_CONN_ERR)
         else:
             print("Connected")
 
@@ -162,7 +172,7 @@ def main():
 
         print("Waiting for sync...", end="", flush=True)
         if not conn.receive_new_state():
-            quit_game(conn, exit_code=FAILED_SYNC_ERR, msg="sync not received")
+            quit_game(conn, exit_code=FAILED_SYNC_ERR)
 
         print("Received")
         print("STARTING GAME")
@@ -198,13 +208,14 @@ def main():
                     conn.send_move(f, t)
                     print(f"sent")
                 except BrokenPipeError:
-                    quit_game(conn, exit_code=BROKEN_PIPE_ERR, msg="Move not sent [broken connection]")
+                    quit_game(conn, exit_code=BROKEN_PIPE_ERR)
                 except ConnectionResetError:
-                    quit_game(conn, exit_code=CONN_RESET_ERR, msg=f"Move not sent [connection reset by peer]")
+                    quit_game(conn, exit_code=CONN_RESET_ERR)
                 ##########
 
             elif turn == opponent:
                 print("Waiting for opponent move...", end="", flush=True)
+                received = None
 
                 # Did you receive the next game state?
                 try:
@@ -215,8 +226,9 @@ def main():
 
                     print(f"received")
                 except ConnectionError:
-                    received = None  # pointless, since the game will now quit
-                    quit_game(conn, exit_code=STATE_UPDATE_ERR, msg="New state not received")
+                    quit_game(conn, exit_code=STATE_UPDATE_ERR)
+                except TimeoutError:
+                    quit_game(conn, exit_code=CONN_TIMEOUT_ERR)
                 ##########
 
                 new_state, next_turn = received
