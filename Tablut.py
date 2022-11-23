@@ -1,3 +1,5 @@
+from time import sleep
+
 import numpy as np
 
 import aima.games as ag
@@ -68,6 +70,24 @@ class Tablut(ag.Game):
 
         return state.available_escape() != (-1, -1)
 
+    def __black_block_escape(self,king,esc, blacks):
+        rows_esc=[e[0] for e in esc]
+        col_esc=[e[1] for e in esc]
+        var=[0,0]
+        if king[0] in rows_esc:
+            for b in blacks:
+                if b[0] in rows_esc and b[0] == king[0]:
+                    var[0]+=1
+        if king[1] in col_esc:
+            for b in blacks:
+                if b[1] in col_esc and b[1]== king[1]:
+                    var[1]+=1
+        if var[0]>=2 and var[1]>=2:
+            return 1
+        else:
+            return 0
+
+
     def utility(self, state, player):
         king = state.king
         mult = +1 if player == "WHITE" else -1
@@ -77,36 +97,50 @@ class Tablut(ag.Game):
 
         if king == (100, 100):
             return np.inf * -1 * mult
-
+        esc = [(0, 1), (0, 2), (0, 6), (0, 7),
+               (1, 0), (1, 8),
+               (2, 0), (2, 8),
+               (6, 0), (6, 8),
+               (7, 0), (7, 8),
+               (8, 1), (8, 2), (8, 6), (8, 7), ]
         if player == "WHITE":
             gr = state.grid
-            esc = [(0, 1), (0, 2), (0, 6), (0, 7),
-                   (1, 0), (1, 8),
-                   (2, 0), (2, 8),
-                   (6, 0), (6, 8),
-                   (7, 0), (7, 8),
-                   (8, 1), (8, 2), (8, 6), (8, 7), ]
+
             escapes = [e for e in esc if gr[e].type == CellType.ESCAPE and gr[e].checker == CheckerType.EMPTY]
 
-            d_to_escapes = np.array([np.linalg.norm(np.array(king) - np.array(e), 2) for e in escapes])
-            min_d_to_escapes = int(np.min(d_to_escapes))
-
-            Nenemies = len(state.blacks)
-            param0 = 9 / min_d_to_escapes
-            param1 = 16 - Nenemies
-            param2 = self.__king_in_danger(state)
-            w0 = 5  # np.random.uniform(0, 1)
-            w1 = 1  # np.random.uniform(0, 1)
-            w2 = 1  # np.random.uniform(0, 1)
-            return param0 * w0 + param1 * w1 - param2 * w2
-        if player == "BLACK":
             blacks = state.blacks
-            distances = np.array([np.linalg.norm((np.array(king) - np.array(b)), 2) for b in blacks])
-            d_mean = int(np.mean(distances))
-            Nenemies = 9 - len(state.whites)
-            w0 = 1  # np.random.uniform(0, 1)
-            w1 = 1  # np.random.uniform(0, 1)
-            return Nenemies * w0 + d_mean * w1
+
+            d_king_to_blacks = np.array([np.linalg.norm(np.array(king)-np.array(black),2) for black in blacks])
+            mean_d_king_to_blacks = np.mean(d_king_to_blacks)
+
+            d_to_escapes = np.array([abs(np.array(king)[0]-np.array(e)[0])+abs( np.array(king)[1]-np.array(e)[1]) for e in escapes])
+            min_d_to_escapes = (np.min(d_to_escapes))
+
+            param0 = 9 / min_d_to_escapes
+            param1 = 16 - len(blacks)
+            param2 = self.__king_in_danger(state)
+            param3 = mean_d_king_to_blacks
+            #param4 = numero di bianchi che proteggono il re.
+            param4 = len([ 1 for w in state.whites if (w[0]==king[0]-1 or w[0]==king[0]+1) and( w[1]==king[1]-1 or w[1]==king[1]+1)])
+            #param5 = numero di escapes che vede il re se raggiunge una certa posizione
+            param5 = len([1 for e in escapes if king[0]==e[0] or king[1]==e[1]])
+            w1 = 3
+            w2 = 1
+            w3 = 2
+            w4 = 3
+            return (param0+param5) * 1/len(blacks) + param1 * w1 - param2 * w2 +param3*w3+w4*(4-param4)
+
+        if player == "BLACK":
+
+            distances = np.array([abs(np.array(king)[0]-np.array(b)[0])+abs(np.array(king)[1]-np.array(b)[1]) for b in state.blacks])
+            d_mean = np.mean(distances)
+            param0 = 9 - len(state.whites)
+            param2 = self.__black_block_escape(king,esc,state.blacks)
+            param1 = d_mean
+            w0 = 1#  np.random.uniform(0, 1)
+            w1 = 1#  np.random.uniform(0, 1)
+            w2 = 5
+            return param0*w0  + param1*w1 + param2*w2
 
     def terminal_test(self, state):
         """Return True if this is a final state for the game."""
