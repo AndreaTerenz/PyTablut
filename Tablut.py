@@ -238,12 +238,14 @@ class Tablut(Game):
         time_left = 50
 
         try:
-            for d in range(depth):
-
+            for d in range(1, depth):
+                print(f"Depth: {d} - Time left: {time_left}")
                 with multiprocessing.Pool(processes = 1) as pool:
                     before = time()
-                    res = pool.apply_async(self.run_minmax, (depth, possible_moves))
+                    res = pool.apply_async(self.run_minmax, (d, possible_moves))
                     output = res.get(timeout=time_left)
+                    after = time()
+                    time_left -= abs(before - after)
 
         except:
             return output

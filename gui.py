@@ -1,5 +1,6 @@
 import sys
-
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame as pg
 import pygame.draw as pgdraw
 import pygame.math as pgmath
