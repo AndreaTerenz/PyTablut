@@ -1,4 +1,5 @@
 import math
+from time import time_ns
 
 import numpy as np
 
@@ -71,21 +72,19 @@ class Tablut(Game):
         return len(state.available_escapes()) > 0
 
     def __black_block_escape(self, king, esc, blacks):
-        rows_esc = [e[0] for e in esc]
-        col_esc = [e[1] for e in esc]
-        var = [0, 0]
+        rows_esc = [0,1,2,6,7,8]
+        col_esc = [0,1,2,6,7,8]
+        esc_r = 0
+        esc_c = 0
         if king[0] in rows_esc:
             for b in blacks:
                 if b[0] in rows_esc and b[0] == king[0]:
-                    var[0] += 1
+                    esc_r += 1
         if king[1] in col_esc:
             for b in blacks:
                 if b[1] in col_esc and b[1] == king[1]:
-                    var[1] += 1
-        if var[0] >= 2 and var[1] >= 2:
-            return 1
-        else:
-            return 0
+                    esc_c += 1
+        return esc_r >= 2 and esc_c >= 2
 
     def utility(self, state, player):
         def distance_between_cells(a, b, mode=""):
@@ -150,7 +149,7 @@ class Tablut(Game):
             param4 = len([1 for w in state.whites if (w[0] == king[0] - 1 or w[0] == king[0] + 1) and (
                         w[1] == king[1] - 1 or w[1] == king[1] + 1)])
             # param5 = numero di escapes che vede il re se raggiunge una certa posizione
-            param5 = len([1 for e in escapes if king[0] == e[0] or king[1] == e[1]])
+            param5 = len(state.available_escapes()) #[1 for e in escapes if king[0] == e[0] or king[1] == e[1]]
             w1 = 3
             w2 = 1
             w3 = 2
@@ -227,8 +226,21 @@ class Tablut(Game):
                 else:
                     pass
 
-        game_state = GameState(to_move=self.role,
-                               utility=self.utility(self.board, self.role),
-                               board=self.board,
-                               moves=possible_moves)
-        return alpha_beta_cutoff_search(game_state, self, depth)
+        output = None
+        time_tot = 45.0
+
+        for d in range(1, depth):
+            print(f"Time left: {time_tot} - {d}")
+            game_state = GameState(to_move=self.role,
+                                   utility=self.utility(self.board, self.role),
+                                   board=self.board,
+                                   moves=possible_moves)
+            tmp, time_taken = alpha_beta_cutoff_search(game_state, self, d, time_left=time_tot)
+            if tmp:
+                print(time_taken)
+                output = tmp
+                time_tot -= time_taken
+            else:
+                break
+
+        return output

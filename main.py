@@ -86,15 +86,10 @@ def run_locally(role, opponent, max_turns, minmax_depth):
             move = tablut.board.king, escapes[0]
             done = True
         else:
-            tablut.role = turn
-            game_state = GameState(to_move=turn,
-                                   utility=tablut.utility(tablut.board, turn),
-                                   board=tablut.board,
-                                   moves=tablut.actions(tablut.board))
-
             print("Searching move...")
             before = time()
-            move = alpha_beta_cutoff_search(game_state, tablut, minmax_depth)
+            tablut.role = turn
+            move = tablut.search_move(minmax_depth)
             after = time()
 
         assert not move is None, "WHAT DO YOU MEAN MOVE IS NONE???"
