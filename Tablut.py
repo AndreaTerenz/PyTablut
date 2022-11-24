@@ -1,5 +1,6 @@
 import math
-from time import time_ns
+import multiprocessing
+from time import sleep, time
 
 import numpy as np
 
@@ -178,6 +179,13 @@ class Tablut(Game):
     def display(self, state):
         self.board.print_grid()
 
+    def run_minmax(self, depth, possible_moves):
+        game_state = GameState(to_move=self.role,
+                               utility=self.utility(self.board, self.role),
+                               board=self.board,
+                               moves=possible_moves)
+        return alpha_beta_cutoff_search(game_state, self, depth)
+
     def search_move(self, depth):
         # Avoid minmax if possible
         possible_moves = self.actions(self.board)
@@ -227,20 +235,17 @@ class Tablut(Game):
                     pass
 
         output = None
-        time_tot = 45.0
+        time_left = 50
 
-        for d in range(1, depth):
-            print(f"Time left: {time_tot} - {d}")
-            game_state = GameState(to_move=self.role,
-                                   utility=self.utility(self.board, self.role),
-                                   board=self.board,
-                                   moves=possible_moves)
-            tmp, time_taken = alpha_beta_cutoff_search(game_state, self, d, time_left=time_tot)
-            if tmp:
-                print(time_taken)
-                output = tmp
-                time_tot -= time_taken
-            else:
-                break
+        try:
+            for d in range(depth):
 
-        return output
+                with multiprocessing.Pool(processes = 1) as pool:
+                    before = time()
+                    res = pool.apply_async(self.run_minmax, (depth, possible_moves))
+                    output = res.get(timeout=time_left)
+
+        except:
+            return output
+
+

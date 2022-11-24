@@ -128,7 +128,7 @@ def alpha_beta_search(state, game):
     return best_action
 
 
-def alpha_beta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None, time_left = -1):
+def alpha_beta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
     """Search game to determine best action; use alpha-beta pruning.
     This version cuts off search and uses an evaluation function."""
 
@@ -164,21 +164,14 @@ def alpha_beta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None, t
     best_score = -np.inf
     beta = np.inf
     best_action = None
-    start = time()
 
     for a in game.actions(state):
-
         v = min_value(game.result(state, a), best_score, beta, 1)
         if v >= best_score:
             best_score = v
             best_action = a
 
-        now = time()
-        if abs(start - now) >= time_left:
-            return None, abs(start - now)
-        else:
-            print("AO", abs(start - now))
-    return best_action, abs(start - time())
+    return best_action
 
 
 # ______________________________________________________________________________
