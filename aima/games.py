@@ -4,7 +4,6 @@ import copy
 import itertools
 import random
 from collections import namedtuple
-from time import time, time_ns
 
 import numpy as np
 
@@ -171,7 +170,7 @@ def alpha_beta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
             best_score = v
             best_action = a
 
-    return best_action
+    return best_action, best_score
 
 
 # ______________________________________________________________________________

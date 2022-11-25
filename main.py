@@ -5,7 +5,6 @@ from time import time
 from icecream import ic
 
 from Tablut import Tablut
-from aima.games import GameState, alpha_beta_cutoff_search
 from connect import get_player_port, Connection
 from gui import GUI
 
@@ -188,6 +187,7 @@ def main():
 
                 before = time()
                 move = tablut.search_move(minmax_depth)
+                print(move)
                 after = time()
 
                 f, t = move

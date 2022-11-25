@@ -1,6 +1,7 @@
 import math
 import multiprocessing
-from time import sleep, time
+import traceback
+from time import time
 
 import numpy as np
 
@@ -64,7 +65,7 @@ class Tablut(Game):
         else :
             return 0
 
-    def __king_to_escape(self, state):
+    def king_sees_escape(self, state):
         king = state.king
 
         if state.grid[king].type == CellType.ESCAPE:
@@ -118,11 +119,12 @@ class Tablut(Game):
         king = state.king
         mult = +1 if player == "WHITE" else -1
 
-        if self.__king_to_escape(state):
-            return np.inf * mult
+        if king == Board.KING_FUCCED:
+            return np.inf * -mult  # +inf for BLACK; -inf for WHITE
 
-        if king == (100, 100):
-            return np.inf * -1 * mult
+        if self.king_sees_escape(state):
+            return np.inf * mult  # +inf for WHITE; -inf for BLACK
+
         esc = [(0, 1), (0, 2), (0, 6), (0, 7),
                (1, 0), (1, 8),
                (2, 0), (2, 8),
@@ -184,24 +186,23 @@ class Tablut(Game):
                                utility=self.utility(self.board, self.role),
                                board=self.board,
                                moves=possible_moves)
-        return alpha_beta_cutoff_search(game_state, self, depth)
+        move, score = alpha_beta_cutoff_search(game_state, self, depth)
+
+        return move, score
 
     def search_move(self, depth):
         # Avoid minmax if possible
         possible_moves = self.actions(self.board)
         escapes = self.board.available_escapes()
+        k_pos = self.board.king
 
+        # Check escapes
         if len(escapes) > 0:
             if self.role == "WHITE":
                 return self.board.king, escapes[0]
             elif self.role == "BLACK":
                 if len(escapes) == 1:
-                    k_pos = self.board.king
                     esc = escapes[0]
-
-                    # 0 == vertically (because king.row == escape.row)
-                    # 1 == horizontally (because king.column == escape.column)
-                    # Do I need to move vertically or horizontally to block the king?
 
                     def is_between(a, m, b) -> bool:
                         """
@@ -234,20 +235,43 @@ class Tablut(Game):
                 else:
                     pass
 
-        output = None
+        if self.role == "BLACK":
+            king_neighb = self.board.get_cell_neighbors(k_pos[0], k_pos[1])
+            black_neighb = [n for n in king_neighb if self.board[n].checker == CheckerType.BLACK]
+            empty_neighb = [n for n in king_neighb if self.board[n].checker == CheckerType.EMPTY]
+
+            if len(black_neighb) >= 2:
+                if self.board[k_pos].type == CellType.CASTLE and len(black_neighb) == 3 and len(empty_neighb) == 1:
+                    # King almost surrounded in castle
+                    # Only one possible cell left to fill
+                    cell_to_fill = empty_neighb[0]
+                    pm = [move for move in possible_moves if move[1] == cell_to_fill]
+
+                    if len(pm) > 0:
+                        return pm[0]
+
+        best_move = None
+        best_score = -np.inf
         time_left = 50
 
         try:
             for d in range(1, depth):
                 print(f"Depth: {d} - Time left: {time_left}")
-                with multiprocessing.Pool(processes = 1) as pool:
+                with multiprocessing.Pool(processes=1) as pool:
                     before = time()
                     res = pool.apply_async(self.run_minmax, (d, possible_moves))
-                    output = res.get(timeout=time_left)
+                    new_move, new_score = res.get(timeout=time_left)
+
+                    if new_score >= best_score:
+                        best_score = new_score
+                        best_move = new_move
+
                     after = time()
                     time_left -= abs(before - after)
+        except IndexError:
+            print("ONGA BONGA")
+            traceback.print_exc()
+        except Exception:
+            pass
 
-        except:
-            return output
-
-
+        return best_move

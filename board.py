@@ -62,6 +62,8 @@ class Board:
     Represents the global state of the game
     """
 
+    KING_FUCCED = (69, 69)
+
     empty_cell = Cell(CellType.NORMAL, CheckerType.EMPTY)
 
     # FIXME: This keep_empty thing is beyond ugly
@@ -187,15 +189,6 @@ class Board:
         output.set_checker_at_pos(to_cell, checker_to_move)
         output.set_checker_at_pos(from_cell, CheckerType.EMPTY)
 
-        """
-        Funzione per mangiare le pedine. Dato il checker spostato nella nuova posizione
-        (indicizzata da new_pos), controlla il suo vicinato. Se nel vicinato ci sono
-        pedine dell'avversario, allora controlla la pedina vicina a tali pedine sulla stessa
-        linea. Se c'è una pedina del colore della pedina che ha appena fatto la mossa, OPPURE
-        una casella di tipo CAMP OPPURE la casella CASTLE, la pedina avversaria viene rimossa
-        perché viene mangiata.
-        """
-
         row, column = to_cell #creo ste variabili solo per semplicità di notazione
 
         # controllo se nel vicinato della pedina ci sono pedine avversarie. Se
@@ -214,19 +207,9 @@ class Board:
         # caso del re
         row_k, column_k = output.king
         # can't check outside the board
-        """
-        if output.king != (100, 100) and 0 < row_k < 8 and 0 < column_k < 8:
-            king_neighbors = [output.grid[row_k, column_k - 1], output.grid[row_k - 1, column_k],
-                              output.grid[row_k, column_k + 1], output.grid[row_k + 1, column_k]]
 
-            blacks = king_neighbors.count(Cell(CellType.NORMAL, CheckerType.BLACK))
-            castles = king_neighbors.count(Cell(CellType.CASTLE, CheckerType.EMPTY))
-
-            if blacks == 4:
-                output.king = (100, 100)
-            elif blacks == 3 and castles == 1:
-                output.king = (100, 100)
-                """
+        if output.king_trapped():
+            output.king = Board.KING_FUCCED
 
         others = []
 
@@ -245,28 +228,6 @@ class Board:
                 if output.grid[far].checker == role or \
                         output.grid[far].type in [CellType.CAMP, CellType.CASTLE]:
                     eaten_checkers.append(near)
-
-        """
-        if column > 1 and output.grid[row, column - 1].checker == opponent:
-            if output.grid[row, column - 2].checker == role or \
-                    output.grid[row, column - 2].type in [CellType.CAMP, CellType.CASTLE]:
-                eaten_checkers.append((row, column - 1))
-
-        if column < 7 and output.grid[row, column + 1].checker == opponent:
-            if output.grid[row, column + 2].checker == role or \
-                    output.grid[row, column + 2].type in [CellType.CAMP, CellType.CASTLE]:
-                eaten_checkers.append((row, column + 1))
-
-        if row > 1 and output.grid[row - 1, column].checker == opponent:
-            if output.grid[row - 2, column].checker == role or \
-                    output.grid[row - 2, column].type in [CellType.CAMP, CellType.CASTLE]:
-                eaten_checkers.append((row - 1, column))
-
-        if row < 7 and output.grid[row + 1, column].checker == opponent:
-            if output.grid[row + 2, column].checker == role or \
-                    output.grid[row + 2, column].type in [CellType.CAMP, CellType.CASTLE]:
-                eaten_checkers.append((row + 1, column))
-        """
 
         if output.king_trapped():
             pass  # output.king = (100,100)
@@ -333,7 +294,7 @@ class Board:
 
         :return: True if the game is over
         """
-        if self.king == (100, 100):
+        if self.king == Board.KING_FUCCED:
             return True
 
         # King in an escape tile?
@@ -343,20 +304,21 @@ class Board:
         return self.king_trapped()
 
     def king_trapped(self):
+        if self.king == Board.KING_FUCCED:
+            return True
+
         king_r, king_c = self.king
         black_king_neighbors = 0
         borders_castle = 0
 
         # Count how many blacks borders the kings
         # and "how many castles" (either 0 or 1, obv)
-        neighbors = [(king_r - 1, king_c), (king_r + 1, king_c), (king_r, king_c - 1), (king_r, king_c + 1)]
-        for n in neighbors:
+        for n in self.get_cell_neighbors(king_r, king_c):
             r, c = n
-            if 0 <= r <= 8 and 0 <= c <= 8:
-                is_black = self.grid[r, c].checker == CheckerType.BLACK
-                is_castle = self.grid[r, c].type == CellType.CASTLE
-                black_king_neighbors += int(is_black)
-                borders_castle += int(is_castle)
+            is_black = self.grid[r, c].checker == CheckerType.BLACK
+            is_castle = self.grid[r, c].type == CellType.CASTLE
+            black_king_neighbors += int(is_black)
+            borders_castle += int(is_castle)
 
         if self.grid[self.king].type == CellType.CASTLE and black_king_neighbors == 4:
             # 4 blacks have surrounded the king in the castle
@@ -535,3 +497,22 @@ class Board:
                 escapes.append((i, c))
 
         return escapes
+
+    def get_cell_neighbors(self, r, c):
+        """
+        Returns neighboring positions for position [r,c]
+
+        """
+
+        output = []
+
+        if r >= 1:
+            output.append((r - 1, c))
+        if r <= 7:
+            output.append((r + 1, c))
+        if c >= 1:
+            output.append((r, c - 1))
+        if c <= 7:
+            output.append((r, c + 1))
+
+        return output
