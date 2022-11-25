@@ -239,12 +239,42 @@ class Tablut(Game):
             king_neighb = self.board.get_cell_neighbors(k_pos[0], k_pos[1])
             black_neighb = [n for n in king_neighb if self.board[n].checker == CheckerType.BLACK]
             empty_neighb = [n for n in king_neighb if self.board[n].checker == CheckerType.EMPTY]
+            king_borders_castle = len([n for n in king_neighb if self.board[n].type == CellType.CASTLE]) == 1
 
             if len(black_neighb) >= 2:
+                cell_to_fill = None
+
                 if self.board[k_pos].type == CellType.CASTLE and len(black_neighb) == 3 and len(empty_neighb) == 1:
                     # King almost surrounded in castle
                     # Only one possible cell left to fill
                     cell_to_fill = empty_neighb[0]
+                elif king_borders_castle and len(black_neighb) >= 2 and len(empty_neighb) == 1:
+                    cell_to_fill = empty_neighb[0]
+                elif len(black_neighb) >= 1 and len(empty_neighb) >= 1:
+                    kr, kc = k_pos
+
+                    if kr >= 1 \
+                            and (self.board[(kr - 1, kc)].type == CellType.CAMP or self.board[
+                        (kr - 1, kc)].checker == CheckerType.BLACK) \
+                            and self.board[(kr + 1, kc)].checker == CheckerType.EMPTY:
+                        cell_to_fill = (kr + 1, kc)
+                    elif kr <= 7 \
+                            and (self.board[(kr + 1, kc)].type == CellType.CAMP or self.board[
+                        (kr - 1, kc)].checker == CheckerType.BLACK) \
+                            and self.board[(kr - 1, kc)].checker == CheckerType.EMPTY:
+                        cell_to_fill = (kr - 1, kc)
+                    elif kc >= 1 \
+                            and (self.board[(kr, kc - 1)].type == CellType.CAMP or self.board[
+                        (kr - 1, kc)].checker == CheckerType.BLACK) \
+                            and self.board[(kr, kc + 1)].checker == CheckerType.EMPTY:
+                        cell_to_fill = (kr, kc + 1)
+                    elif kc <= 7 \
+                            and (self.board[(kr, kc + 1)].type == CellType.CAMP or self.board[
+                        (kr - 1, kc)].checker == CheckerType.BLACK) \
+                            and self.board[(kr, kc - 1)].checker == CheckerType.EMPTY:
+                        cell_to_fill = (kr, kc - 1)
+
+                if not cell_to_fill is None:
                     pm = [move for move in possible_moves if move[1] == cell_to_fill]
 
                     if len(pm) > 0:
@@ -265,6 +295,10 @@ class Tablut(Game):
                     if new_score >= best_score:
                         best_score = new_score
                         best_move = new_move
+
+                    if best_score == np.inf:
+                        print(f"Stopped early (winning move)")
+                        return best_move
 
                     after = time()
                     time_left -= abs(before - after)
