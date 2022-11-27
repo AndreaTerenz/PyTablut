@@ -16,20 +16,21 @@ Once you have cloned the repo, go into its root folder and run
 ```
 pipenv install      # installs required packages
 pipenv install -d   # installs development packages
-pipenv shell        # activates virtual environment
 ```
 
-You are now ready to run the client. Note that `pipenv shell` is still required every time you want to execute the
-client!
+You are now ready to run the client.
 
 ## Running
 
 ### Client
 
-The client can be run using the following arguments:
+`launch_player.sh` is a shell script that directly launches the client with a given role (etiher "WHITE" or "BLACK") and
+a given ip address.
+
+Alternatively, the client can be run using the following arguments:
 
 ```
-usage: main.py [-h] [-p PORT] [-i IP] [-l] [-d DEPTH] [--skip-connection]
+usage: main.py [-h] [-p PORT] [-i IP] [-l] [-t MAX_TURNS] [-d DEPTH]
                {BLACK,WHITE}
 
 positional arguments:
@@ -42,15 +43,19 @@ options:
   -i IP, --ip IP        Server IP address (defaults to localhost)
   -l, --local           Do not connect to server and run player against itself
                         locally
+  -t MAX_TURNS, --max-turns MAX_TURNS
+                        Maximum number of turns for local game (implies
+                        --local)
   -d DEPTH, --depth DEPTH
                         Minmax tree maximum depth (default is 3, value <= 0 to
                         ignore depth cutoff)
-  --skip-connection     [DEPRECATED, USE --local] If provided, ignore failed
-                        connection to server
 ```
 
 Usually, the only two required arguments are the player role (always required) and the server IP address (could run on
 localhost, most likely the server is on a different computer).
+
+Note that the client requires the pipenv environment to be active, meaning that you need to run `pipenv shell` before
+launching the client.
 
 ### Server
 
