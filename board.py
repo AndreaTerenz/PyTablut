@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 
 import numpy as np
@@ -313,7 +314,7 @@ class Board:
 
         # Count how many blacks borders the kings
         # and "how many castles" (either 0 or 1, obv)
-        for n in self.get_cell_neighbors(king_r, king_c):
+        for n in get_cell_neighbors(king_r, king_c):
             r, c = n
             is_black = self.grid[r, c].checker == CheckerType.BLACK
             is_castle = self.grid[r, c].type == CellType.CASTLE
@@ -498,21 +499,93 @@ class Board:
 
         return escapes
 
-    def get_cell_neighbors(self, r, c):
-        """
-        Returns neighboring positions for position [r,c]
 
-        """
+def is_between(a, m, b) -> bool:
+    """
+    Check if a cell M is between two other cells A and B. A and B must be on the same
+    row or on the same line
 
-        output = []
+    :param a: position A
+    :param m: position M to be checked
+    :param b: position B
+    """
 
-        if r >= 1:
-            output.append((r - 1, c))
-        if r <= 7:
-            output.append((r + 1, c))
-        if c >= 1:
-            output.append((r, c - 1))
-        if c <= 7:
-            output.append((r, c + 1))
+    ar, ac = a
+    br, bc = b
 
-        return output
+    if not (ar == br or ac == bc):
+        return False
+
+    if ar == br and ac == bc:
+        return m == a
+
+    mr, mc = m
+
+    return (min(ar, br) <= mr <= max(ar, br) and ac == mc == bc) \
+           or (ar == mr == br and min(ac, bc) <= mc <= max(ac, bc))
+
+
+def get_cell_neighbors(r, c):
+    """
+    Returns neighboring positions for position [r,c]
+
+    """
+
+    output = []
+
+    if r >= 1:
+        output.append((r - 1, c))
+    if r <= 7:
+        output.append((r + 1, c))
+    if c >= 1:
+        output.append((r, c - 1))
+    if c <= 7:
+        output.append((r, c + 1))
+
+    return output
+
+
+def get_mirror_position(r, c, center_r, center_c):
+    """
+    Utility function to return the mirror of position [r,c] with respect to
+    position [center_r, center_c]
+
+    :param r: Row of position to be mirrorred
+    :param c: Column of position to be mirrorred
+    :param center_r: Row of center of symmetry
+    :param center_c: Column of center of symmetry
+    :return: Mirrored position
+    """
+
+    delta_r = r - center_r
+    delta_c = c - center_c
+
+    return center_r - delta_r, center_c - delta_c
+
+
+def distance_between_cells(a, b, mode=""):
+    """
+    Small utility function to compute the Euclidean distance between two points A and B
+
+    :param a: First point
+    :param b: Second point
+    :param mode:
+    :return: distance or squared distance between A and B
+    """
+    ax, ay = a
+    bx, by = b
+    diff_x = abs(ax - bx)
+    diff_y = abs(ay - by)
+
+    if mode == "man":
+        return diff_x + diff_y
+
+    d_x_sq = diff_x ** 2
+    d_y_sq = diff_y ** 2
+
+    d_sq = d_x_sq + d_y_sq
+
+    if mode == "esq":
+        return d_sq
+
+    return math.sqrt(d_sq)

@@ -1,4 +1,3 @@
-import math
 import multiprocessing
 import traceback
 from time import time
@@ -6,7 +5,7 @@ from time import time
 import numpy as np
 
 from aima.games import Game, GameState, alpha_beta_cutoff_search
-from board import CheckerType, CellType, Board
+from board import CheckerType, CellType, Board, is_between, get_cell_neighbors, distance_between_cells
 
 
 class Tablut(Game):
@@ -89,33 +88,6 @@ class Tablut(Game):
         return esc_r >= 2 and esc_c >= 2
 
     def utility(self, state, player):
-        def distance_between_cells(a, b, mode=""):
-            """
-            Small utility function to compute the Euclidean distance between two points A and B
-
-            :param a: First point
-            :param b: Second point
-            :param mode:
-            :return: distance or squared distance between A and B
-            """
-            ax, ay = a
-            bx, by = b
-            diff_x = abs(ax - bx)
-            diff_y = abs(ay - by)
-
-            if mode == "man":
-                return diff_x + diff_y
-
-            d_x_sq = diff_x ** 2
-            d_y_sq = diff_y ** 2
-
-            d_sq = d_x_sq + d_y_sq
-
-            if mode == "esq":
-                return d_sq
-
-            return math.sqrt(d_sq)
-
         king = state.king
         mult = +1 if player == "WHITE" else -1
 
@@ -150,7 +122,8 @@ class Tablut(Game):
             param2 = self.__king_in_danger(state)
             param3 = mean_d_king_to_blacks
             # param4 = numero di bianchi che proteggono il re.
-            param4 = len([1 for w in state.whites if abs(w[0] - king[0]) == 1 and abs(w[1] - king[1]) == 1])
+            param4 = len([1 for w in state.whites if (abs(w[0] - king[0]) == 1 and w[1] == king[1]) or (
+                        w[0] == king[0] and abs(w[1] - king[1]) == 1)])
             # param5 = numero di escapes che vede il re se raggiunge una certa posizione
             param5 = len(state.available_escapes())  # [1 for e in escapes if king[0] == e[0] or king[1] == e[1]]
             param6 = whites_count
@@ -207,39 +180,13 @@ class Tablut(Game):
                 return self.board.king, escapes[0]
             elif self.role == "BLACK":
                 if len(escapes) == 1:
-                    esc = escapes[0]
-
-                    def is_between(a, m, b) -> bool:
-                        """
-                        Check if a cell M is between two other cells A and B. A and B must be on the same
-                        row or on the same line
-
-                        :param a: position A
-                        :param m: position M to be checked
-                        :param b: position B
-                        """
-
-                        ar, ac = a
-                        br, bc = b
-
-                        if not (ar == br or ac == bc):
-                            return False
-
-                        if ar == br and ac == bc:
-                            return m == a
-
-                        mr, mc = m
-
-                        return (min(ar, br) <= mr <= max(ar, br) and ac == mc == bc) \
-                               or (ar == mr == br and min(ac, bc) <= mc <= max(ac, bc))
-
-                    pm = [move for move in possible_moves if is_between(k_pos, move[1], esc)]
+                    pm = [move for move in possible_moves if is_between(k_pos, move[1], escapes[0])]
 
                     if len(pm) > 0:
                         return pm[0]
 
         if self.role == "BLACK":
-            king_neighb = self.board.get_cell_neighbors(k_pos[0], k_pos[1])
+            king_neighb = get_cell_neighbors(k_pos[0], k_pos[1])
             black_neighb = [n for n in king_neighb if self.board[n].checker == CheckerType.BLACK]
             empty_neighb = [n for n in king_neighb if self.board[n].checker == CheckerType.EMPTY]
             king_borders_castle = len([n for n in king_neighb if self.board[n].type == CellType.CASTLE]) == 1
@@ -302,23 +249,24 @@ class Tablut(Game):
         try:
             for d in range(1, depth):
                 print(f"Depth: {d} - Time left: {time_left:.3f}...", end="", flush=True)
+
+                before = time()
                 with multiprocessing.Pool(processes=1) as pool:
-                    before = time()
                     res = pool.apply_async(self.run_minmax, (d, self.actions(self.board)))
                     new_move, new_score = res.get(timeout=time_left)
-                    time_taken = abs(time() - before)
+                time_taken = abs(time() - before)
 
-                    print(f"Move found in {time_taken:.3f} - Score: {new_score:.3f}")
-                    time_left -= time_taken
+                print(f"Move found in {time_taken:.3f} - Score: {new_score:.3f}")
+                time_left -= time_taken
 
-                    if new_score >= best_score:
-                        best_score = new_score
-                        best_move = new_move
-                        best_depth = d
+                if new_score >= best_score:
+                    best_score = new_score
+                    best_move = new_move
+                    best_depth = d
 
-                    if best_score == np.inf:
-                        print(f"Stopped early (winning move)")
-                        return best_move
+                if best_score == np.inf:
+                    print(f"Stopped early (winning move)")
+                    return best_move
         except IndexError:
             print("ONGA BONGA")
             traceback.print_exc()
