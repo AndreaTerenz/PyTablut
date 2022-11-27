@@ -42,27 +42,27 @@ class Tablut(Game):
 
         board_result = state.apply_move(move_from, move_to, self.role)
         return board_result  # .to_string_grid()
-    
-    def __king_in_danger(self,state):
 
-        king=state.king
-        enemies_in_column=0
-        enemies_in_row=0
+    def __king_in_danger(self, state):
+
+        king = state.king
+        enemies_in_column = 0
+        enemies_in_row = 0
 
         for i in state.grid[:, king[1]]:
             if i.checker == CheckerType.BLACK:
-                enemies_in_column+=1
+                enemies_in_column += 1
                 break
 
-        for i in state.grid[king[0],:]:
+        for i in state.grid[king[0], :]:
             if i.checker == CheckerType.BLACK:
-                enemies_in_row+=1
+                enemies_in_row += 1
                 break
 
         if enemies_in_row != 0 and enemies_in_column != 0:
-            return (enemies_in_row+enemies_in_column)
+            return (enemies_in_row + enemies_in_column)
 
-        else :
+        else:
             return 0
 
     def king_sees_escape(self, state):
@@ -74,8 +74,8 @@ class Tablut(Game):
         return len(state.available_escapes()) > 0
 
     def __black_block_escape(self, king, esc, blacks):
-        rows_esc = [0,1,2,6,7,8]
-        col_esc = [0,1,2,6,7,8]
+        rows_esc = [0, 1, 2, 6, 7, 8]
+        col_esc = [0, 1, 2, 6, 7, 8]
         esc_r = 0
         esc_c = 0
         if king[0] in rows_esc:
@@ -131,44 +131,50 @@ class Tablut(Game):
                (6, 0), (6, 8),
                (7, 0), (7, 8),
                (8, 1), (8, 2), (8, 6), (8, 7), ]
+
+        whites_count = len(state.whites)
+        blacks_count = len(state.blacks)
+
+        d_king_to_blacks = np.array([distance_between_cells(king, black, mode="man") for black in state.blacks])
+        mean_d_king_to_blacks = np.mean(d_king_to_blacks)
+
         if player == "WHITE":
-            gr = state.grid
-
-            escapes = [e for e in esc if gr[e].type == CellType.ESCAPE and gr[e].checker == CheckerType.EMPTY]
-
-            blacks = state.blacks
-
-            d_king_to_blacks = np.array([distance_between_cells(king, black, mode="man") for black in blacks])
-            mean_d_king_to_blacks = np.mean(d_king_to_blacks)
+            escapes = [e for e in esc if
+                       state.grid[e].type == CellType.ESCAPE and state.grid[e].checker == CheckerType.EMPTY]
 
             d_to_escapes = np.array([distance_between_cells(king, e, mode="man") for e in escapes])
             min_d_to_escapes = (np.min(d_to_escapes))
 
             param0 = 9 / min_d_to_escapes
-            param1 = 16 - len(blacks)
+            param1 = 16 - blacks_count
             param2 = self.__king_in_danger(state)
             param3 = mean_d_king_to_blacks
             # param4 = numero di bianchi che proteggono il re.
-            param4 = len([1 for w in state.whites if (w[0] == king[0] - 1 or w[0] == king[0] + 1) and (
-                        w[1] == king[1] - 1 or w[1] == king[1] + 1)])
+            param4 = len([1 for w in state.whites if abs(w[0] - king[0]) == 1 and abs(w[1] - king[1]) == 1])
             # param5 = numero di escapes che vede il re se raggiunge una certa posizione
-            param5 = len(state.available_escapes()) #[1 for e in escapes if king[0] == e[0] or king[1] == e[1]]
-            w1 = 3
-            w2 = 1
-            w3 = 2
-            w4 = 3
-            return (param0 + param5) * 1 / len(blacks) + param1 * w1 - param2 * w2 + param3 * w3 + w4 * (4 - param4)
+            param5 = len(state.available_escapes())  # [1 for e in escapes if king[0] == e[0] or king[1] == e[1]]
+            param6 = whites_count
 
+            w6 = whites_count + blacks_count
+            w0 = 25 - blacks_count - whites_count
+            w1 = w6
+            w2 = 10
+            w3 = w0
+            w4 = w0
+
+            return (param0 + param5) * w0 + param1 * w1 - param2 * w2 + param3 * w3 + w4 * (4 - param4) + w6 * param6
         if player == "BLACK":
-            distances = np.array([distance_between_cells(king, b, mode="man") for b in state.blacks])
-            d_mean = np.mean(distances)
-            param0 = 9 - len(state.whites)
+            param0 = 9 - whites_count
+            param1 = mean_d_king_to_blacks
             param2 = self.__black_block_escape(king, esc, state.blacks)
-            param1 = d_mean
-            w0 = 1  # np.random.uniform(0, 1)
-            w1 = 1  # np.random.uniform(0, 1)
-            w2 = 5
-            return param0 * w0 + param1 * w1 + param2 * w2
+            param3 = blacks_count
+
+            w0 = whites_count + blacks_count
+            w1 = 25 - blacks_count - whites_count
+            w2 = 25 - blacks_count - whites_count
+            w3 = w0
+
+            return param0 * w0 + param1 * w1 + param2 * w2 + param3 * w3
 
     def terminal_test(self, state):
         """Return True if this is a final state for the game."""
@@ -190,8 +196,7 @@ class Tablut(Game):
 
         return move, score
 
-    def search_move(self, depth):
-        # Avoid minmax if possible
+    def quick_search(self):
         possible_moves = self.actions(self.board)
         escapes = self.board.available_escapes()
         k_pos = self.board.king
@@ -232,8 +237,6 @@ class Tablut(Game):
 
                     if len(pm) > 0:
                         return pm[0]
-                else:
-                    pass
 
         if self.role == "BLACK":
             king_neighb = self.board.get_cell_neighbors(k_pos[0], k_pos[1])
@@ -280,32 +283,46 @@ class Tablut(Game):
                     if len(pm) > 0:
                         return pm[0]
 
-        best_move = None
+        return None
+
+    def search_move(self, depth):
+        # Avoid minmax if possible
+        print("Running quick search...", end="", flush=True)
+        best_move = self.quick_search()
+        if best_move:
+            print("quick search successful")
+            return best_move
+
+        print("quick search failed, fallback to MinMax")
+
         best_score = -np.inf
-        time_left = 50
+        best_depth = 1
+        time_left = 58
 
         try:
             for d in range(1, depth):
-                print(f"Depth: {d} - Time left: {time_left}")
+                print(f"Depth: {d} - Time left: {time_left:.3f}...", end="", flush=True)
                 with multiprocessing.Pool(processes=1) as pool:
                     before = time()
-                    res = pool.apply_async(self.run_minmax, (d, possible_moves))
+                    res = pool.apply_async(self.run_minmax, (d, self.actions(self.board)))
                     new_move, new_score = res.get(timeout=time_left)
+                    time_taken = abs(time() - before)
+
+                    print(f"Move found in {time_taken:.3f} - Score: {new_score:.3f}")
+                    time_left -= time_taken
 
                     if new_score >= best_score:
                         best_score = new_score
                         best_move = new_move
+                        best_depth = d
 
                     if best_score == np.inf:
                         print(f"Stopped early (winning move)")
                         return best_move
-
-                    after = time()
-                    time_left -= abs(before - after)
         except IndexError:
             print("ONGA BONGA")
             traceback.print_exc()
         except Exception:
-            pass
+            print(f"Search timed out - Max depth searched: {best_depth}")
 
         return best_move

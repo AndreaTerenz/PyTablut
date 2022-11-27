@@ -183,7 +183,7 @@ def main():
             if turn == role:
                 tablut.board.print_grid(title="Current board:")
 
-                print("Searching move...", end="", flush=True)
+                print("Searching move...")
 
                 before = time()
                 move = tablut.search_move(minmax_depth)
@@ -197,7 +197,7 @@ def main():
                 print(f"search took: {(after - before):.3f} s")
 
                 tablut.board.print_grid(title="Updated board:")
-                print("Sending nudes...", end="", flush=True)
+                print("Sending move...", end="", flush=True)
 
                 # Did you manage to send the move?
                 try:
