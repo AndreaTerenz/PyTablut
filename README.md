@@ -24,7 +24,7 @@ You are now ready to run the client.
 
 ### Client
 
-`launch_player.sh` is a shell script that directly launches the client with a given role (etiher "WHITE" or "BLACK") and
+`runmyplayer.sh` is a shell script that directly launches the client with a given role (etiher "WHITE" or "BLACK") and
 a given ip address.
 
 Alternatively, the client can be run using the following arguments:

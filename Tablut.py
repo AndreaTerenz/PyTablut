@@ -173,18 +173,7 @@ class Tablut(Game):
         possible_moves = self.actions(self.board)
         escapes = self.board.available_escapes()
         k_pos = self.board.king
-
-        # Check escapes
-        if len(escapes) > 0:
-            if self.role == "WHITE":
-                return self.board.king, escapes[0]
-            elif self.role == "BLACK":
-                if len(escapes) == 1:
-                    pm = [move for move in possible_moves if is_between(k_pos, move[1], escapes[0])]
-
-                    if len(pm) > 0:
-                        return pm[0]
-
+        
         if self.role == "BLACK":
             king_neighb = get_cell_neighbors(k_pos[0], k_pos[1])
             black_neighb = [n for n in king_neighb if self.board[n].checker == CheckerType.BLACK]
@@ -226,6 +215,17 @@ class Tablut(Game):
 
                 if not cell_to_fill is None:
                     pm = [move for move in possible_moves if move[1] == cell_to_fill]
+
+                    if len(pm) > 0:
+                        return pm[0]
+
+        # Check escapes
+        if len(escapes) > 0:
+            if self.role == "WHITE":
+                return self.board.king, escapes[0]
+            elif self.role == "BLACK":
+                if len(escapes) == 1:
+                    pm = [move for move in possible_moves if is_between(k_pos, move[1], escapes[0])]
 
                     if len(pm) > 0:
                         return pm[0]

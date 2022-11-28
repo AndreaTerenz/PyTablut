@@ -3,6 +3,7 @@ from enum import Enum
 
 import numpy as np
 from icecream import ic
+from numpy import sign
 
 
 # ic.disable()
@@ -392,6 +393,14 @@ class Board:
         :param start_c: starting column
         :return: True if the move is valid
         """
+        # Forbid diagonal moves
+        if start_r != destination_r and start_c != destination_c:
+            return False
+
+        # Moving the checker to the same position it's already in is trivially always possible
+        if start_r == destination_r and start_c == destination_c:
+            return True
+
         checker_to_move = self.grid[start_r, start_c].checker
         dest_cell_checker = self.grid[destination_r, destination_c].checker
 
@@ -467,37 +476,48 @@ class Board:
         """
         r, c = self.king
 
-        if 3<=r<=5 and 3<=c<=5:
-            # Around the center of the board there are definetely no visible escapes
+        if 3 <= r <= 5 and 3 <= c <= 5:
+            # Around the center of the board there are definitely no visible escapes
             return []
 
         escapes = []
+
         # Explore left
-        for j in range(c - 1, -1, -1):
-            if self[r, j].checker != CheckerType.EMPTY:
-                break
-            if self[r, j].type == CellType.ESCAPE:
-                escapes.append((r, j))
+        if self.path_between_cells(self.king, (r, 0)):
+            escapes.append((r, 0))
         # Explore right
-        for j in range(c + 1, 9):
-            if self[r, j].checker != CheckerType.EMPTY:
-                break
-            if self[r, j].type == CellType.ESCAPE:
-                escapes.append((r, j))
+        if self.path_between_cells(self.king, (r, 8)):
+            escapes.append((r, 8))
         # Explore up
-        for i in range(r - 1, -1, -1):
-            if self[i, c].checker != CheckerType.EMPTY:
-                break
-            if self[i, c].type == CellType.ESCAPE:
-                escapes.append((i, c))
+        if self.path_between_cells(self.king, (0, c)):
+            escapes.append((0, c))
         # Explore down
-        for i in range(r + 1, 9):
-            if self[i, c].checker != CheckerType.EMPTY:
-                break
-            if self[i, c].type == CellType.ESCAPE:
-                escapes.append((i, c))
+        if self.path_between_cells(self.king, (8, c)):
+            escapes.append((8, c))
 
         return escapes
+
+    def path_between_cells(self, start, end):
+        sr, sc = start
+        er, ec = end
+
+        if sr != er and sc != ec:
+            return False
+
+        if sr == er and sc == ec:
+            return True
+
+        if sr == er:
+            direction = -sign(sc - ec)
+            cells = [self[sr, j] for j in range(sc + direction, ec + direction, direction)]
+        else:
+            direction = -sign(sr - er)
+            cells = [self[i, sc] for i in range(sr + direction, er + direction, direction)]
+
+        for cell in cells:
+            if cell.checker != CheckerType.EMPTY or cell.type in [CellType.CAMP, CellType.CASTLE]:
+                return False
+        return True
 
 
 def is_between(a, m, b) -> bool:
