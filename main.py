@@ -31,7 +31,7 @@ errors = {
 def parse_arguments():
     parser = ArgumentParser()
 
-    parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')", choices=["BLACK", "WHITE"])
+    parser.add_argument("role", help="Player role (either 'BLACK' or 'WHITE')", choices=["BLACK", "WHITE", "black", "white", "Black", "White"])
     parser.add_argument("-p", "--port", help="Server connection port (defaults to 5800 for WHITE and 5801 for BLACK)",
                         type=int)
     parser.add_argument("-i", "--ip", help="Server IP address (defaults to localhost)", default="localhost")
@@ -54,7 +54,7 @@ def parse_arguments():
     if not port:
         port = get_player_port(args.role)
 
-    return args.role, args.ip, port, skip_conn, args.depth, args.max_turns
+    return args.role.upper(), args.ip, port, skip_conn, args.depth, args.max_turns
 
 def run_locally(role, opponent, max_turns, minmax_depth):
     print(f"Max number of turns per player: {max_turns}")

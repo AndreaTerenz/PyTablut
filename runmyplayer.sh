@@ -1,1 +1,1 @@
-pipenv run python3.10 main.py "$1" -i "$2" -d 5
+python3.10 main.py "$1" -i "$3" -d 5
